@@ -19,6 +19,7 @@ import rikser123.security.dto.request.CreateUserRequestDto;
 import rikser123.security.dto.response.CreateUserResponseDto;
 import rikser123.security.dto.response.LoginResponseDto;
 import rikser123.security.dto.response.RikserResponseItem;
+import rikser123.security.repository.entity.User;
 import rikser123.security.service.SecurityService;
 import rikser123.security.service.UserService;
 

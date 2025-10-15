@@ -2,12 +2,14 @@ package rikser123.security.advice;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import rikser123.security.dto.response.RikserResponseItem;
+import rikser123.security.utils.RikserResponseUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,11 +36,21 @@ public class GlobalExceptionHandler {
             errors.putIfAbsent(fieldLastPart, new ArrayList<>(List.of(message)));
         });
 
-        var response = new RikserResponseItem();
-        response.setResult(false);
-        response.setErrors(errors);
+        return RikserResponseUtils.createResponse(errors, null);
+    }
 
-        return response;
+    @ExceptionHandler(RuntimeException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public RikserResponseItem handleRuntimeException(RuntimeException exception) {
+        log.error("Internal server error", exception);
+        return RikserResponseUtils.createResponse((exception.getMessage()));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public RikserResponseItem handleAccessDeniedException(AccessDeniedException exception) {
+        log.warn("access forbidden", exception);
+        return RikserResponseUtils.createResponse("Доступ к запрашиваемому ресурсу запрещен");
     }
 
     private static String getFieldLastPart(String field) {

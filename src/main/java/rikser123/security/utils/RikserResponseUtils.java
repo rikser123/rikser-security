@@ -12,24 +12,30 @@ public class RikserResponseUtils {
             boolean result,
             T data,
             Map<String, List<String>> errors,
-            Map<String, List<String>> warnings
+            Map<String, List<String>> warnings,
+            String message
     ) {
         var response = new RikserResponseItem<T>();
         response.setData(data);
         response.setResult(result);
         response.setErrors(errors);
         response.setWarnings(warnings);
+        response.setMessage(message);
         return response;
     }
 
     public static <T> RikserResponseItem<T> createResponse(T data) {
-        return createResponse(true, data, null, null);
+        return createResponse(true, data, null, null, null);
     }
 
     public static RikserResponseItem createResponse(
             Map<String, List<String>> errors,
             Map<String, List<String>> warnings
     ) {
-        return createResponse(false, null, errors, warnings);
+        return createResponse(false, null, errors, warnings, null);
+    }
+
+    public static RikserResponseItem createResponse(String message) {
+        return createResponse(false, null, null, null, message);
     }
 }

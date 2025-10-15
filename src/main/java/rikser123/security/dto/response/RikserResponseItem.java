@@ -17,4 +17,5 @@ public class RikserResponseItem<T> {
     private T data;
     private Map<String, List<String>> errors;
     private Map<String, List<String>> warnings;
+    private String message;
 }
