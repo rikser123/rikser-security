@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: rikser-security
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: "jdbc:postgresql://localhost:5432/postgres"
+    username: postgres
+    password: postgres
+    hikari:
+      schema: rikser-security
+      connection-init-sql: CREATE SCHEMA IF NOT EXISTS "rikser-security"
+      maximum-pool-size: 5
+      connection-timeout: 5000
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  liquibase:
+    change-log: classpath:/db/changelog/changelog-master.xml
+    default-schema: rikser-security
+    liquibase-schema: rikser-security
+    drop-first: false
+
+
+server:
+  port: 8081
+
+jwt:
+  expirationTime: 86400000
+  secret: rikser123_aifhAISDdiO8198Lxkcn
