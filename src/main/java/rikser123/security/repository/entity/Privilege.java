@@ -1,6 +1,6 @@
 package rikser123.security.repository.entity;
 
 public enum Privilege {
-    USER,
-    ADMIN
+    USER_EDIT,
+    USER_DELETE
 }

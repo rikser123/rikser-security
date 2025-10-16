@@ -3,27 +3,26 @@ package rikser123.security.dto.request;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import rikser123.security.repository.entity.Privilege;
-import rikser123.security.validation.IsEqual;
 import rikser123.security.validation.IsStrongPassword;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
-@IsEqual(
-        firstField = "password",
-        secondField = "passwordConfirmation",
-        message = "Подтверждение пароля не равно паролю"
-)
-@Schema(description = "Параметры для регистрации пользователя")
-public class CreateUserRequestDto {
+public class EditUserDto {
+    @NotNull(message = "Id пользователя должно быть заполнено")
+    @Schema(description = "Id пользователя")
+    private UUID id;
+
     @NotEmpty(message = "Логин не должен быть пустым")
     @Size(min = 8, message = "Логин должен состоять минимум из 8 симсолов")
     @Schema(description = "Логин пользователя",example = "hoor")

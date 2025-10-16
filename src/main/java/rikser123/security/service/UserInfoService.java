@@ -1,5 +1,6 @@
 package rikser123.security.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -11,7 +12,7 @@ import rikser123.security.repository.entity.User;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class UserService {
+public class UserInfoService {
     private final UserRepository userRepository;
 
     public User getCurrentUser() {
@@ -25,7 +26,7 @@ public class UserService {
 
     public User getByUsername(String username) {
         return userRepository.findUserByLogin(username)
-                .orElseThrow(() -> new IllegalStateException("Пользователь не найден"));
+                .orElseThrow(() -> new EntityNotFoundException("Пользователь не найден"));
 
     }
 }

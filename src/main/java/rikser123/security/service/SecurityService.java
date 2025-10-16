@@ -1,21 +1,25 @@
 package rikser123.security.service;
 
+import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 import rikser123.security.dto.request.CreateUserRequestDto;
+import rikser123.security.dto.request.EditUserDto;
 import rikser123.security.dto.request.LoginRequestDto;
 import rikser123.security.dto.response.CreateUserResponseDto;
 import rikser123.security.dto.response.LoginResponseDto;
 import rikser123.security.dto.response.RikserResponseItem;
+import rikser123.security.dto.response.UserResponseDto;
 import rikser123.security.mapper.UserMapper;
 import rikser123.security.repository.UserRepository;
 import rikser123.security.repository.entity.Privilege;
-import rikser123.security.repository.entity.UserPrivilege;
 import rikser123.security.utils.JwtUtils;
 import rikser123.security.utils.RikserResponseUtils;
 
@@ -30,28 +34,22 @@ public class SecurityService {
     private final UserMapper userMapper;
     private final JwtUtils jwtUtils;
     private final AuthenticationManager authenticationManager;
+    private final UserInfoService userInfoService;
 
     public ResponseEntity<RikserResponseItem<CreateUserResponseDto>> register(CreateUserRequestDto requestDto) {
         var existedWithSameLogin = userRepository.findUserByLogin(requestDto.getLogin());
 
         if (existedWithSameLogin.isPresent()) {
-           var errorValue = List.of(String.format("Пользователь с логином %s уже зарегистрирован", requestDto.getLogin()));
-            return createErrorResponse("login", errorValue);
+            throw new EntityExistsException(String.format("Пользователь с логином %s уже зарегистрирован", requestDto.getLogin()));
         }
 
         var existedWithSameEmail = userRepository.findUserByEmail(requestDto.getEmail());
 
         if (existedWithSameEmail.isPresent()) {
-            var errorValue =  List.of(String.format("Пользователь с email %s уже зарегистрирован", requestDto.getEmail()));
-            return createErrorResponse("email", errorValue);
+            throw new EntityExistsException(String.format("Пользователь с email %s уже зарегистрирован", requestDto.getEmail()));
         }
 
         var user = userMapper.mapUser(requestDto);
-
-        var userPrivilege = new UserPrivilege();
-        userPrivilege.setPrivilege(Privilege.USER);
-        userPrivilege.setUser(user);
-        user.getPrivileges().add(userPrivilege);
 
         userRepository.save(user);
         var token = jwtUtils.generateToken(user);
@@ -91,6 +89,38 @@ public class SecurityService {
 
         var userDto = userMapper.mapUserToDto(user);
         responseDto.setUser(userDto);
+
+        var response = RikserResponseUtils.createResponse(responseDto);
+        return ResponseEntity.ok(response);
+    }
+
+
+    public ResponseEntity<RikserResponseItem<UserResponseDto>> editUser(EditUserDto userDto) {
+        var currentUser = userInfoService.getCurrentUser();
+
+        if (!userDto.getId().equals(currentUser.getId()) && !currentUser.getPrivileges().contains(Privilege.USER_EDIT)) {
+            throw new AccessDeniedException("Доступ запрещен");
+        }
+
+        var updatedUser = userRepository.findById(userDto.getId())
+                .orElseThrow(() -> new EntityNotFoundException(String.format("Пользователь с id %s не найден", userDto.getId())));
+
+        userMapper.updateUser(userDto, updatedUser);
+
+        var existedWithSameLogin = userRepository.findUserByLoginAndIdIsNot(updatedUser.getLogin(), updatedUser.getId());
+
+        if (existedWithSameLogin.isPresent()) {
+            throw new EntityExistsException(String.format("Пользователь с логином %s уже зарегистрирован", updatedUser.getLogin()));
+        }
+
+        var existedWithSameEmail = userRepository.findUserByEmailAndIdIsNot(updatedUser.getEmail(), updatedUser.getId());
+
+        if (existedWithSameEmail.isPresent()) {
+            throw new EntityExistsException(String.format("Пользователь с email %s уже зарегистрирован", updatedUser.getEmail()));
+        }
+
+        var savedUser = userRepository.save(updatedUser);
+        var responseDto = userMapper.mapUserToDto(savedUser);
 
         var response = RikserResponseUtils.createResponse(responseDto);
         return ResponseEntity.ok(response);

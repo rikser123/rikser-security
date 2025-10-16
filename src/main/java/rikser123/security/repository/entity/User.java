@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "users")
@@ -59,7 +60,11 @@ public class User implements UserDetails  {
     private LocalDateTime created;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, orphanRemoval = true, cascade = CascadeType.ALL)
-    private Set<UserPrivilege> privileges = new HashSet<>();
+    private Set<UserPrivilege> userPrivileges = new HashSet<>();
+
+    public Set<Privilege> getPrivileges() {
+        return userPrivileges.stream().map(UserPrivilege::getPrivilege).collect(Collectors.toSet());
+    }
 
     @UpdateTimestamp
     @Column(name = "updated", insertable = false)
@@ -74,7 +79,7 @@ public class User implements UserDetails  {
     @Override
     @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return privileges.stream()
+        return userPrivileges.stream()
                 .map(userPrivilege -> new SimpleGrantedAuthority(userPrivilege.getPrivilege().name())
                 ).toList();
     }
@@ -110,7 +115,7 @@ public class User implements UserDetails  {
                 "login: " + login +
                 "email: " + email +
                 "status: " + status +
-                "privileges: " + privileges.stream().map(UserPrivilege::getPrivilege).toList();
+                "privileges: " + getPrivileges();
     }
 }
 
