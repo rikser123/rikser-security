@@ -3,7 +3,6 @@ package rikser123.security.mapper;
 import lombok.extern.slf4j.Slf4j;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,8 +27,7 @@ public abstract class UserMapper {
 
     @AfterMapping
     protected void mapUser(CreateUserRequestDto dto, @MappingTarget User user) {
-        var encodedPassword = passwordEncoder.encode(user.getPassword());
-        user.setPassword(encodedPassword);
+        setEncodedPassword(user);
 
         var privileges = dto.getPrivileges().stream().map(privilege -> {
             var userPrivilege = new UserPrivilege();
@@ -65,5 +63,11 @@ public abstract class UserMapper {
              userPrivileges.add(userPrivilege);
          });
 
+        setEncodedPassword(user);
+    }
+
+    private void setEncodedPassword(User user) {
+        var encodedPassword = passwordEncoder.encode(user.getPassword());
+        user.setPassword(encodedPassword);
     }
 }

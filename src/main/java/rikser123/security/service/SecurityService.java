@@ -13,18 +13,24 @@ import org.springframework.stereotype.Service;
 import rikser123.security.dto.request.CreateUserRequestDto;
 import rikser123.security.dto.request.EditUserDto;
 import rikser123.security.dto.request.LoginRequestDto;
+import rikser123.security.dto.request.UserDeactivateRequest;
+import rikser123.security.dto.request.UserEmailRequest;
 import rikser123.security.dto.response.CreateUserResponseDto;
 import rikser123.security.dto.response.LoginResponseDto;
 import rikser123.security.dto.response.RikserResponseItem;
+import rikser123.security.dto.response.UserDeactivateResponse;
+import rikser123.security.dto.response.UserEmailResponse;
 import rikser123.security.dto.response.UserResponseDto;
 import rikser123.security.mapper.UserMapper;
 import rikser123.security.repository.UserRepository;
 import rikser123.security.repository.entity.Privilege;
+import rikser123.security.repository.entity.UserStatus;
 import rikser123.security.utils.JwtUtils;
 import rikser123.security.utils.RikserResponseUtils;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @AllArgsConstructor
@@ -96,11 +102,7 @@ public class SecurityService {
 
 
     public ResponseEntity<RikserResponseItem<UserResponseDto>> editUser(EditUserDto userDto) {
-        var currentUser = userInfoService.getCurrentUser();
-
-        if (!userDto.getId().equals(currentUser.getId()) && !currentUser.getPrivileges().contains(Privilege.USER_EDIT)) {
-            throw new AccessDeniedException("Доступ запрещен");
-        }
+        checkEditAccess(userDto.getId());
 
         var updatedUser = userRepository.findById(userDto.getId())
                 .orElseThrow(() -> new EntityNotFoundException(String.format("Пользователь с id %s не найден", userDto.getId())));
@@ -126,10 +128,46 @@ public class SecurityService {
         return ResponseEntity.ok(response);
     }
 
+    public ResponseEntity<RikserResponseItem<UserDeactivateResponse>> deactivate(UserDeactivateRequest requestDto) {
+        var user = userRepository.findById(requestDto.getId())
+                .orElseThrow(() -> new EntityNotFoundException(String.format("Пользователь с id %s не найден", requestDto.getId())));
+        user.setStatus(UserStatus.DEACTIVATED);
+        userRepository.save(user);
+
+        var userIdDto = new UserDeactivateResponse();
+        userIdDto.setId(user.getId());
+
+        var response = RikserResponseUtils.createResponse(userIdDto);
+        return ResponseEntity.ok(response);
+    }
+
+    public ResponseEntity<RikserResponseItem<UserEmailResponse>> activateEmail(UserEmailRequest requestDto) {
+        checkEditAccess(requestDto.getId());
+
+        var user = userRepository.findById(requestDto.getId())
+                .orElseThrow(() -> new EntityNotFoundException(String.format("Пользователь с id %s не найден", requestDto.getId())));
+        user.setStatus(UserStatus.EMAIL_ACTIVATED);
+        userRepository.save(user);
+
+        var userIdDto = new UserEmailResponse();
+        userIdDto.setId(user.getId());
+
+        var response = RikserResponseUtils.createResponse(userIdDto);
+        return ResponseEntity.ok(response);
+    }
+
     private static <T> ResponseEntity<RikserResponseItem<T>> createErrorResponse(String errorKey, List<String> errorValue) {
         var errors = new HashMap<String, List<String>>();
         errors.put(errorKey, errorValue);
         var response = RikserResponseUtils.createResponse(errors, null);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    private void checkEditAccess(UUID userId) {
+        var currentUser = userInfoService.getCurrentUser();
+
+        if (!userId.equals(currentUser.getId()) && !currentUser.getPrivileges().contains(Privilege.USER_EDIT)) {
+            throw new AccessDeniedException("Доступ запрещен");
+        }
     }
 }

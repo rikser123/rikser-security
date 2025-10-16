@@ -7,6 +7,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,9 +18,13 @@ import rikser123.security.dto.request.EditUserDto;
 import rikser123.security.dto.request.LoginRequestDto;
 import rikser123.security.dto.request.RikserRequestItem;
 import rikser123.security.dto.request.CreateUserRequestDto;
+import rikser123.security.dto.request.UserDeactivateRequest;
+import rikser123.security.dto.request.UserEmailRequest;
 import rikser123.security.dto.response.CreateUserResponseDto;
 import rikser123.security.dto.response.LoginResponseDto;
 import rikser123.security.dto.response.RikserResponseItem;
+import rikser123.security.dto.response.UserDeactivateResponse;
+import rikser123.security.dto.response.UserEmailResponse;
 import rikser123.security.dto.response.UserResponseDto;
 import rikser123.security.service.SecurityService;
 import rikser123.security.service.UserInfoService;
@@ -33,45 +39,58 @@ public class UserController {
     private final UserInfoService userService;
 
     @PostMapping("/register")
-    @Operation(summary = "Регистрация пользователя", description = "Регистрация пользователя")
+    @Operation(description = "Регистрация пользователя")
     public ResponseEntity<RikserResponseItem<CreateUserResponseDto>> register(
             @Valid
             @RequestBody
-            @Parameter(name = "Параметры для регистрации", description = "Параметры для регистрации", required = true)
+            @Parameter(description = "Параметры для регистрации", required = true)
             RikserRequestItem<CreateUserRequestDto> registerDto
     ) {
         return securityService.register(registerDto.getData());
     }
 
-    @PutMapping("/login")
-    @Operation(summary = "Авторизация пользователя", description = "Авторизация пользователя")
+    @PostMapping("/login")
+    @Operation(description = "Авторизация пользователя")
     public ResponseEntity<RikserResponseItem<LoginResponseDto>> login(
             @Valid
             @RequestBody
-            @Parameter(name = "Параметры для авторизации", description = "Параметры для авторизации", required = true)
+            @Parameter(description = "Параметры для авторизации", required = true)
             RikserRequestItem<LoginRequestDto> loginDto
     ) {
         return securityService.login(loginDto.getData());
     }
 
     @PutMapping("/edit")
-    @Operation(summary = "Редактирование пользователя", description = "Редактирование пользователя")
+    @Operation(description = "Редактирование пользователя")
     public ResponseEntity<RikserResponseItem<UserResponseDto>> edit(
             @Valid
             @RequestBody
-            @Parameter(name = "Параметры для редактирования пользователя", description = "Параметры для редактирования пользователя", required = true)
+            @Parameter(description = "Параметры для редактирования пользователя", required = true)
             RikserRequestItem<EditUserDto> editDto
     ) {
         return securityService.editUser(editDto.getData());
     }
 
-    @PutMapping("/get")
-    public ResponseEntity<RikserResponseItem<LoginResponseDto>> get(
-            @Valid @RequestBody RikserRequestItem<LoginRequestDto> loginDto
+    @PatchMapping("/deactivate")
+    @Operation(description = "Деактивация пользователя")
+    @PreAuthorize("hasAuthority('USER_DELETE')")
+    public ResponseEntity<RikserResponseItem<UserDeactivateResponse>> deactivate(
+            @Valid
+            @RequestBody
+            @Parameter(description = "Параметры для деактивации пользователя")
+            RikserRequestItem<UserDeactivateRequest> deactivateDto
     ) {
-        var result = securityService.login(loginDto.getData());
-        var user = userService.getCurrentUser();
-        log.info("user {} {}", user.getAuthorities(), user.getPrivileges());
-        return result;
+        return securityService.deactivate(deactivateDto.getData());
+    }
+
+    @PatchMapping("/activate-email")
+    @Operation(description = "Подтверждение емейла пользователя")
+    public ResponseEntity<RikserResponseItem<UserEmailResponse>> activateEmail(
+            @Valid
+            @RequestBody
+            @Parameter(description = "Параметры для для подтверждения емейла пользователя")
+            RikserRequestItem<UserEmailRequest> deactivateDto
+    ) {
+        return securityService.activateEmail(deactivateDto.getData());
     }
 }
