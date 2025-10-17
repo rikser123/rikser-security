@@ -1,11 +1,33 @@
+import org.gradle.api.publish.PublishingExtension
+
 plugins {
 	java
 	id("org.springframework.boot") version "3.5.5"
 	id("io.spring.dependency-management") version "1.1.7"
+	`maven-publish`
+}
+
+
+configure<PublishingExtension> {
+	publications {
+		register<MavenPublication>("gpr") {
+			from(components["java"])
+		}
+	}
+	repositories {
+		maven {
+			name = "GitHubPackages"
+			url = uri("https://maven.pkg.github.com/rikser123/rikser-security")
+			credentials {
+				username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_ACTOR")
+				password = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")
+			}
+		}
+	}
 }
 
 group = "rikser123"
-version = "0.0.1-SNAPSHOT"
+version = "0.0.1"
 description = "Security"
 
 java {
@@ -52,4 +74,5 @@ tasks.withType<Test> {
 	useJUnitPlatform()
 	jvmArgs("-javaagent:${mockitoAgent.asPath}")
 }
+
 
