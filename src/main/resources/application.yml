@@ -18,7 +18,9 @@ spring:
     default-schema: rikser-security
     liquibase-schema: rikser-security
     drop-first: false
-
+  data:
+    rest:
+      detection-strategy: annotated
 
 server:
   port: 8081
