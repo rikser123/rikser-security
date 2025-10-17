@@ -27,7 +27,7 @@ configure<PublishingExtension> {
 }
 
 group = "rikser123"
-version = "0.0.1"
+version = "0.0.2"
 description = "Security"
 
 java {
