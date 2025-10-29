@@ -20,14 +20,14 @@ configure<PublishingExtension> {
 			url = uri("https://maven.pkg.github.com/rikser123/rikser-security")
 			credentials {
 				username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_ACTOR")
-				password = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")
+				password = project.findProperty("gpr.key") as String? ?: System.getenv("BUNDLE_TOKEN")
 			}
 		}
 	}
 }
 
 group = "rikser123"
-version = "0.0.4"
+version = "0.0.6"
 description = "Security"
 
 java {
@@ -48,7 +48,7 @@ repositories {
 		name = "GitHubPackagesBundle"
 		url = uri("https://maven.pkg.github.com/rikser123/rikser-bundle")
 		credentials {
-			username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_USERNAME")
+			username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_ACTOR")
 			password = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")
 		}
 	}
