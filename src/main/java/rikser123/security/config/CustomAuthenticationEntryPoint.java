@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
-import rikser123.security.utils.RikserResponseUtils;
+import rikser123.bundle.utils.RikserResponseUtils;
 
 import java.io.IOException;
 

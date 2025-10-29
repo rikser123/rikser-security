@@ -8,8 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import rikser123.security.repository.entity.Privilege;
-import rikser123.security.validation.IsEqual;
-import rikser123.security.validation.IsStrongPassword;
+import rikser123.bundle.validation.IsEqual;
+import rikser123.bundle.validation.IsStrongPassword;
 
 import java.util.ArrayList;
 import java.util.List;

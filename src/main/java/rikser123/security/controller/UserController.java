@@ -16,18 +16,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import rikser123.security.dto.request.EditUserDto;
 import rikser123.security.dto.request.LoginRequestDto;
-import rikser123.security.dto.request.RikserRequestItem;
+import rikser123.bundle.dto.request.RikserRequestItem;
 import rikser123.security.dto.request.CreateUserRequestDto;
 import rikser123.security.dto.request.UserDeactivateRequest;
 import rikser123.security.dto.request.UserEmailRequest;
 import rikser123.security.dto.response.CreateUserResponseDto;
 import rikser123.security.dto.response.LoginResponseDto;
-import rikser123.security.dto.response.RikserResponseItem;
+import rikser123.bundle.dto.response.RikserResponseItem;
 import rikser123.security.dto.response.UserDeactivateResponse;
 import rikser123.security.dto.response.UserEmailResponse;
 import rikser123.security.dto.response.UserResponseDto;
 import rikser123.security.service.SecurityService;
-import rikser123.security.service.UserInfoService;
 
 @RestController
 @RequestMapping("/api/v1/user")
@@ -36,7 +35,6 @@ import rikser123.security.service.UserInfoService;
 @Tag(name = "Сервис для работы с пользователями", description = "Сервис для работы с пользтвателями")
 public class UserController {
     private final SecurityService securityService;
-    private final UserInfoService userService;
 
     @PostMapping("/register")
     @Operation(description = "Регистрация пользователя")

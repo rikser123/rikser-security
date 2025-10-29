@@ -17,7 +17,7 @@ import rikser123.security.dto.request.UserDeactivateRequest;
 import rikser123.security.dto.request.UserEmailRequest;
 import rikser123.security.dto.response.CreateUserResponseDto;
 import rikser123.security.dto.response.LoginResponseDto;
-import rikser123.security.dto.response.RikserResponseItem;
+import rikser123.bundle.dto.response.RikserResponseItem;
 import rikser123.security.dto.response.UserDeactivateResponse;
 import rikser123.security.dto.response.UserEmailResponse;
 import rikser123.security.dto.response.UserResponseDto;
@@ -26,7 +26,7 @@ import rikser123.security.repository.UserRepository;
 import rikser123.security.repository.entity.Privilege;
 import rikser123.security.repository.entity.UserStatus;
 import rikser123.security.utils.JwtUtils;
-import rikser123.security.utils.RikserResponseUtils;
+import rikser123.bundle.utils.RikserResponseUtils;
 
 import java.util.HashMap;
 import java.util.List;

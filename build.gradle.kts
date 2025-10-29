@@ -16,7 +16,7 @@ configure<PublishingExtension> {
 	}
 	repositories {
 		maven {
-			name = "GitHubPackages"
+			name = "GitHubPackagesSecurity"
 			url = uri("https://maven.pkg.github.com/rikser123/rikser-security")
 			credentials {
 				username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_ACTOR")
@@ -44,6 +44,14 @@ configurations {
 
 repositories {
 	mavenCentral()
+	maven {
+		name = "GitHubPackagesBundle"
+		url = uri("https://maven.pkg.github.com/rikser123/rikser-bundle")
+		credentials {
+			username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_ACTOR")
+			password = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")
+		}
+	}
 }
 
 val mockitoAgent = configurations.create("mockitoAgent")
@@ -68,6 +76,7 @@ dependencies {
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 	mockitoAgent("org.mockito:mockito-core") { isTransitive = false }
 	annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
+	implementation("rikser123:bundle:0.0.5")
 }
 
 tasks.withType<Test> {

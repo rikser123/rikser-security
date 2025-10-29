@@ -8,8 +8,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import rikser123.security.dto.response.RikserResponseItem;
-import rikser123.security.utils.RikserResponseUtils;
+import rikser123.bundle.dto.response.RikserResponseItem;
+import rikser123.bundle.utils.RikserResponseUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
