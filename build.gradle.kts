@@ -9,25 +9,20 @@ plugins {
 
 
 configure<PublishingExtension> {
-	publications {
-		register<MavenPublication>("gpr") {
-			from(components["java"])
-		}
-	}
 	repositories {
 		maven {
 			name = "GitHubPackagesSecurity"
 			url = uri("https://maven.pkg.github.com/rikser123/rikser-security")
 			credentials {
-				System.getenv("GITHUB_ACTOR")
-				System.getenv("GITHUB_TOKEN")
+				username = System.getenv("GITHUB_ACTOR")
+				password = System.getenv("GITHUB_TOKEN")
 			}
 		}
 	}
 }
 
 group = "rikser123"
-version = "0.1.4"
+version = "0.1.5"
 description = "Security"
 
 java {
