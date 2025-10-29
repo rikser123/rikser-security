@@ -19,15 +19,15 @@ configure<PublishingExtension> {
 			name = "GitHubPackagesSecurity"
 			url = uri("https://maven.pkg.github.com/rikser123/rikser-security")
 			credentials {
-				username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_ACTOR")
-				password = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")
+				username = project.properties["gpr.user"] as String
+				password = project.properties["gpr.key"] as String
 			}
 		}
 	}
 }
 
 group = "rikser123"
-version = "0.1.0"
+version = "0.1.1"
 description = "Security"
 
 java {
@@ -48,8 +48,8 @@ repositories {
 		name = "GitHubPackagesBundle"
 		url = uri("https://maven.pkg.github.com/rikser123/rikser-bundle")
 		credentials {
-			username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_ACTOR")
-			password = project.findProperty("gpr.key") as String? ?: System.getenv("BUNDLE_TOKEN")
+			username = project.properties["gpr.user"] as String
+			password = project.properties["gpr.key"] as String
 		}
 	}
 }
@@ -66,7 +66,7 @@ dependencies {
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 	mockitoAgent("org.mockito:mockito-core") { isTransitive = false }
 	annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
-	implementation("rikser123:bundle:0.0.5")
+	implementation("rikser123:bundle:0.0.6")
 }
 
 tasks.withType<Test> {
