@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import rikser123.security.repository.entity.Privilege;
 import rikser123.security.repository.entity.UserStatus;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
@@ -27,6 +28,18 @@ public class UserResponseDto {
 
     @Schema(description = "Статус пользователя", example = "REGISTERED")
     private UserStatus status;
+
+    @Schema(description = "Имя пользователя", example = "Иван")
+    private String firstName;
+
+    @Schema(description = "Отчество пользователя", example = "Иванович")
+    private String middleName;
+
+    @Schema(description = "Фамилия пользователя", example = "Иванов")
+    private String lastName;
+
+    @Schema(description = "Дата рождения пользователя", example = "1990-01-01")
+    private LocalDate birthDate;
 
     @Schema(description = "Привилегии пользователя", example = "ADMIN, USER")
     private Set<Privilege> privileges;

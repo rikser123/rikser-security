@@ -22,6 +22,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashSet;
@@ -54,6 +55,18 @@ public class User implements UserDetails  {
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
     private UserStatus status = UserStatus.REGISTERED;
+
+    @Column(name = "first_name", length = 100, nullable = false)
+    private String firstName;
+
+    @Column(name = "middle_name", length = 100)
+    private String middleName;
+
+    @Column(name = "last_name", length = 100, nullable = false)
+    private String lastName;
+
+    @Column(name = "birth_date", length = 100, nullable = false)
+    private LocalDate birthDate;
 
     @CreationTimestamp
     @Column(name = "created", updatable = false)
@@ -112,6 +125,9 @@ public class User implements UserDetails  {
     public String toString() {
         return "user " +
                 "id: " + id +
+                "name: " + firstName +
+                "lastName" + lastName +
+                "middleName" + middleName +
                 "login: " + login +
                 "email: " + email +
                 "status: " + status +
