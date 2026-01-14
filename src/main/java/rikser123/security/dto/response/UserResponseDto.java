@@ -12,6 +12,10 @@ import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * Информация по пользователю
+ *
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

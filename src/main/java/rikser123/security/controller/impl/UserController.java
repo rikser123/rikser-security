@@ -1,19 +1,14 @@
-package rikser123.security.controller;
+package rikser123.security.controller.impl;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
+import rikser123.security.controller.UserApi;
 import rikser123.security.dto.request.EditUserDto;
 import rikser123.security.dto.request.LoginRequestDto;
 import rikser123.bundle.dto.request.RikserRequestItem;
@@ -33,60 +28,49 @@ import rikser123.security.service.SecurityService;
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Сервис для работы с пользователями", description = "Сервис для работы с пользтвателями")
-public class UserController {
+public class UserController implements UserApi {
     private final SecurityService securityService;
 
-    @PostMapping("/register")
-    @Operation(description = "Регистрация пользователя")
-    public ResponseEntity<RikserResponseItem<CreateUserResponseDto>> register(
+    @Override
+    public Mono<RikserResponseItem<CreateUserResponseDto>> register(
             @Valid
             @RequestBody
-            @Parameter(description = "Параметры для регистрации", required = true)
             RikserRequestItem<CreateUserRequestDto> registerDto
     ) {
         return securityService.register(registerDto.getData());
     }
 
-    @PostMapping("/login")
-    @Operation(description = "Авторизация пользователя")
-    public ResponseEntity<RikserResponseItem<LoginResponseDto>> login(
+    @Override
+    public Mono<RikserResponseItem<LoginResponseDto>> login(
             @Valid
             @RequestBody
-            @Parameter(description = "Параметры для авторизации", required = true)
             RikserRequestItem<LoginRequestDto> loginDto
     ) {
         return securityService.login(loginDto.getData());
     }
 
-    @PutMapping("/edit")
-    @Operation(description = "Редактирование пользователя")
-    public ResponseEntity<RikserResponseItem<UserResponseDto>> edit(
+   @Override
+    public Mono<RikserResponseItem<UserResponseDto>> edit(
             @Valid
             @RequestBody
-            @Parameter(description = "Параметры для редактирования пользователя", required = true)
             RikserRequestItem<EditUserDto> editDto
     ) {
         return securityService.editUser(editDto.getData());
     }
 
-    @PatchMapping("/deactivate")
-    @Operation(description = "Деактивация пользователя")
-    @PreAuthorize("hasAuthority('USER_DELETE')")
-    public ResponseEntity<RikserResponseItem<UserDeactivateResponse>> deactivate(
+    @Override
+    public Mono<RikserResponseItem<UserDeactivateResponse>> deactivate(
             @Valid
             @RequestBody
-            @Parameter(description = "Параметры для деактивации пользователя")
             RikserRequestItem<UserDeactivateRequest> deactivateDto
     ) {
         return securityService.deactivate(deactivateDto.getData());
     }
 
-    @PatchMapping("/activate-email")
-    @Operation(description = "Подтверждение емейла пользователя")
-    public ResponseEntity<RikserResponseItem<UserEmailResponse>> activateEmail(
+    @Override
+    public Mono<RikserResponseItem<UserEmailResponse>> activateEmail(
             @Valid
             @RequestBody
-            @Parameter(description = "Параметры для для подтверждения емейла пользователя")
             RikserRequestItem<UserEmailRequest> deactivateDto
     ) {
         return securityService.activateEmail(deactivateDto.getData());

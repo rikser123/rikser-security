@@ -7,11 +7,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.UUID;
+/**
+ * Запрос на подтверждеие емейла пользователя
+ *
+ */
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Schema(description = "Входные параметры для деактивации пользователя")
+@Schema(description = "Входные параметры для подтверждения емейла пользователя")
 public class UserEmailRequest {
     @NotNull(message = "Id пользователя не должно быть пустым")
     @Schema(description = "Id пользователя")

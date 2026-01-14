@@ -1,6 +1,9 @@
 package rikser123.security.advice;
 
+import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
@@ -15,8 +18,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * Класс для работы с глобальными исключениями
+ *
+ */
+
 @RestControllerAdvice
 @Slf4j
+@Order(-2) // поднятие приоритета по сравнению с актуатором
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -51,6 +60,20 @@ public class GlobalExceptionHandler {
     public RikserResponseItem handleAccessDeniedException(AccessDeniedException exception) {
         log.warn("access forbidden", exception);
         return RikserResponseUtils.createResponse("Доступ к запрашиваемому ресурсу запрещен");
+    }
+
+    @ExceptionHandler(EntityExistsException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RikserResponseItem handleEntityExistsException(EntityExistsException exception) {
+        log.warn("entity exists", exception);
+        return RikserResponseUtils.createResponse(exception.getMessage());
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public RikserResponseItem handleEntityNotFoundException(EntityNotFoundException exception) {
+        log.warn("entity exists", exception);
+        return RikserResponseUtils.createResponse(exception.getMessage());
     }
 
     private static String getFieldLastPart(String field) {

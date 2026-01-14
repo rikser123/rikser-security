@@ -16,17 +16,21 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import rikser123.security.service.UserInfoService;
-import rikser123.security.utils.JwtUtils;
+import rikser123.security.component.Jwt;
 
 import java.io.IOException;
 
+/**
+ * Проверка токена Spring Security
+ *
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     public static final String BEARER_PREFIX = "Bearer ";
     public static final String HEADER_NAME = "Authorization";
-    private final JwtUtils jwtUtils;
+    private final Jwt jwt;
     private final UserInfoService userService;
 
     @Override
@@ -43,14 +47,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         var jwt = authHeader.substring(BEARER_PREFIX.length());
-        var username = jwtUtils.extractUserName(jwt);
+        var username = this.jwt.extractUserName(jwt);
 
         if (StringUtils.isNotEmpty(username) && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userService
                     .userDetailsService()
                     .loadUserByUsername(username);
 
-            if (jwtUtils.isTokenValid(jwt)) {
+            if (this.jwt.isTokenValid(jwt)) {
                 SecurityContext context = SecurityContextHolder.createEmptyContext();
 
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(

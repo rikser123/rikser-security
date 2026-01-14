@@ -11,6 +11,10 @@ import rikser123.bundle.utils.RikserResponseUtils;
 
 import java.io.IOException;
 
+/**
+ * Класс для для преобразования стандарного ответа от SpringSecurity в необходимый формат
+ *
+ */
 @Slf4j
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
     private static ObjectMapper jsonMapper = new ObjectMapper();

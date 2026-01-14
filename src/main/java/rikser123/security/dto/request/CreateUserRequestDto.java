@@ -17,6 +17,11 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Запрос на создание пользователя
+ *
+ */
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Data

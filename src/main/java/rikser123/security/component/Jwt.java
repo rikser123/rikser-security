@@ -1,4 +1,4 @@
-package rikser123.security.utils;
+package rikser123.security.component;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -15,7 +15,7 @@ import java.util.Date;
 
 @Component
 @Slf4j
-public class JwtUtils {
+public class Jwt {
     @Value("${jwt.expirationTime}")
     private long expirationMs;
 

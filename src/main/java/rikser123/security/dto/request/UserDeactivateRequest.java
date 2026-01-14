@@ -7,6 +7,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.UUID;
+/**
+ * Запрос на деактивацию пользователя
+ *
+ */
 
 @Data
 @AllArgsConstructor

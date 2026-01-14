@@ -23,6 +23,11 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 
 import java.util.List;
 
+/**
+ * Конфигурация Spring Security
+ *
+ */
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity

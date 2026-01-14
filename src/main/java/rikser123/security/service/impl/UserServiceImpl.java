@@ -11,6 +11,7 @@ import rikser123.security.repository.entity.UserStatus;
 import rikser123.security.service.StatusMatrix;
 import rikser123.security.service.UserService;
 
+
 import java.util.Optional;
 import java.util.UUID;
 
@@ -63,4 +64,5 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
         return user;
     }
+
 }
