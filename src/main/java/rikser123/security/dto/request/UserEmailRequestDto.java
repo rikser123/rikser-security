@@ -16,8 +16,8 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Schema(description = "Входные параметры для подтверждения емейла пользователя")
-public class UserEmailRequest {
+public class UserEmailRequestDto {
     @NotNull(message = "Id пользователя не должно быть пустым")
-    @Schema(description = "Id пользователя")
+    @Schema(description = "Id пользователя", example = "2b4deb54-d343-4d8c-b41b-0b6b60505b70")
     private UUID id;
 }

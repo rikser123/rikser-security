@@ -15,8 +15,8 @@ import rikser123.bundle.utils.RikserResponseUtils;
 import rikser123.security.dto.request.CreateUserRequestDto;
 import rikser123.security.dto.request.EditUserDto;
 import rikser123.security.dto.request.LoginRequestDto;
-import rikser123.security.dto.request.UserDeactivateRequest;
-import rikser123.security.dto.request.UserEmailRequest;
+import rikser123.security.dto.request.UserDeactivateRequestDto;
+import rikser123.security.dto.request.UserEmailRequestDto;
 import rikser123.security.dto.response.CreateUserResponseDto;
 import rikser123.security.dto.response.LoginResponseDto;
 import rikser123.security.dto.response.UserDeactivateResponse;
@@ -141,7 +141,7 @@ public class SecurityServiceImpl implements SecurityService {
     }
 
     @Override
-    public Mono<RikserResponseItem<UserDeactivateResponse>> deactivate(UserDeactivateRequest requestDto) {
+    public Mono<RikserResponseItem<UserDeactivateResponse>> deactivate(UserDeactivateRequestDto requestDto) {
         return Mono.fromCallable(() -> userService.findById(requestDto.getId()))
             .map(user -> userService.changeStatus(user, UserStatus.DEACTIVATED))
             .map(user -> {
@@ -153,7 +153,7 @@ public class SecurityServiceImpl implements SecurityService {
     }
 
     @Override
-    public Mono<RikserResponseItem<UserEmailResponse>> activateEmail(UserEmailRequest requestDto) {
+    public Mono<RikserResponseItem<UserEmailResponse>> activateEmail(UserEmailRequestDto requestDto) {
         return Mono.fromCallable(() -> {
             checkEditAccess(requestDto.getId());
             var user = userService.findById(requestDto.getId());
@@ -166,6 +166,15 @@ public class SecurityServiceImpl implements SecurityService {
             userIdDto.setId(user.getId());
 
             return RikserResponseUtils.createResponse(userIdDto);
+        });
+    }
+
+    @Override
+    public Mono<RikserResponseItem<UserResponseDto>> getUser(UUID id) {
+        return Mono.fromCallable(() -> userService.findById(id))
+          .map(user -> {
+              var userDto = userMapper.mapUserToDto(user);
+              return RikserResponseUtils.createResponse(userDto);
         });
     }
 

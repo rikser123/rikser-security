@@ -13,8 +13,9 @@ import rikser123.security.dto.request.EditUserDto;
 import rikser123.security.dto.request.LoginRequestDto;
 import rikser123.bundle.dto.request.RikserRequestItem;
 import rikser123.security.dto.request.CreateUserRequestDto;
-import rikser123.security.dto.request.UserDeactivateRequest;
-import rikser123.security.dto.request.UserEmailRequest;
+import rikser123.security.dto.request.UserDeactivateRequestDto;
+import rikser123.security.dto.request.UserEmailRequestDto;
+import rikser123.security.dto.request.UserGetRequestDto;
 import rikser123.security.dto.response.CreateUserResponseDto;
 import rikser123.security.dto.response.LoginResponseDto;
 import rikser123.bundle.dto.response.RikserResponseItem;
@@ -62,7 +63,7 @@ public class UserController implements UserApi {
     public Mono<RikserResponseItem<UserDeactivateResponse>> deactivate(
             @Valid
             @RequestBody
-            RikserRequestItem<UserDeactivateRequest> deactivateDto
+            RikserRequestItem<UserDeactivateRequestDto> deactivateDto
     ) {
         return securityService.deactivate(deactivateDto.getData());
     }
@@ -71,8 +72,17 @@ public class UserController implements UserApi {
     public Mono<RikserResponseItem<UserEmailResponse>> activateEmail(
             @Valid
             @RequestBody
-            RikserRequestItem<UserEmailRequest> deactivateDto
+            RikserRequestItem<UserEmailRequestDto> deactivateDto
     ) {
         return securityService.activateEmail(deactivateDto.getData());
+    }
+
+    @Override
+    public Mono<RikserResponseItem<UserResponseDto>> getUser(
+            @Valid
+            @RequestBody
+            RikserRequestItem<UserGetRequestDto> getDto
+    ) {
+      return securityService.getUser(getDto.getData().getId());
     }
 }

@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -19,8 +20,9 @@ import rikser123.bundle.dto.response.RikserResponseItem;
 import rikser123.security.dto.request.CreateUserRequestDto;
 import rikser123.security.dto.request.EditUserDto;
 import rikser123.security.dto.request.LoginRequestDto;
-import rikser123.security.dto.request.UserDeactivateRequest;
-import rikser123.security.dto.request.UserEmailRequest;
+import rikser123.security.dto.request.UserDeactivateRequestDto;
+import rikser123.security.dto.request.UserEmailRequestDto;
+import rikser123.security.dto.request.UserGetRequestDto;
 import rikser123.security.dto.response.CreateUserResponseDto;
 import rikser123.security.dto.response.LoginResponseDto;
 import rikser123.security.dto.response.UserDeactivateResponse;
@@ -68,7 +70,7 @@ public interface UserApi {
     Mono<RikserResponseItem<UserDeactivateResponse>> deactivate(
             @RequestBody
             @Parameter(description = "Параметры для деактивации пользователя")
-            RikserRequestItem<UserDeactivateRequest> deactivateDto
+            RikserRequestItem<UserDeactivateRequestDto> deactivateDto
     );
 
     @PatchMapping("/activate-email")
@@ -77,6 +79,15 @@ public interface UserApi {
     Mono<RikserResponseItem<UserEmailResponse>> activateEmail(
             @RequestBody
             @Parameter(description = "Параметры для для подтверждения емейла пользователя")
-            RikserRequestItem<UserEmailRequest> deactivateDto
+            RikserRequestItem<UserEmailRequestDto> deactivateDto
+    );
+
+    @GetMapping("/get")
+    @Operation(description = "Получпние пользователя по айди")
+    @ResponseStatus(HttpStatus.OK)
+    Mono<RikserResponseItem<UserResponseDto>> getUser(
+            @RequestBody
+            @Parameter(description = "Параметры для получения пользователя по айди")
+            RikserRequestItem<UserGetRequestDto> getDto
     );
 }

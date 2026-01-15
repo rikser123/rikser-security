@@ -10,6 +10,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.NamedAttributeNode;
+import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -36,6 +38,9 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @Getter
 @Setter
+@NamedEntityGraph(name = "userPrivileges",
+   attributeNodes = @NamedAttributeNode("userPrivileges")
+)
 public class User implements UserDetails  {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -72,7 +77,7 @@ public class User implements UserDetails  {
     @Column(name = "created", updatable = false)
     private LocalDateTime created;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, orphanRemoval = true, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, orphanRemoval = true, cascade = CascadeType.ALL)
     private Set<UserPrivilege> userPrivileges = new HashSet<>();
 
     public Set<Privilege> getPrivileges() {
