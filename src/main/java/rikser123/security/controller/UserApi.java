@@ -38,7 +38,6 @@ public interface UserApi {
 
     @PostMapping("/register")
     @Operation(description = "Регистрация пользователя")
-    @ResponseStatus(HttpStatus.OK)
     Mono<RikserResponseItem<CreateUserResponseDto>> register(
             @RequestBody
             @Parameter(description = "Параметры для регистрации", required = true)

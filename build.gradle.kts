@@ -66,7 +66,7 @@ dependencies {
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 	mockitoAgent("org.mockito:mockito-core") { isTransitive = false }
 	annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
-	implementation("rikser123:bundle:0.0.6")
+	implementation("rikser123:bundle:0.0.9")
 	implementation("org.springframework.boot:spring-boot-starter-webflux:4.0.1")
 }
 

@@ -33,7 +33,8 @@ public class ResponseEntityWrapperAdvice implements ResponseBodyAdvice<Object> {
           ServerHttpRequest request,
           ServerHttpResponse response) {
             if (body instanceof RikserResponseItem<?> bodyResponse) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(bodyResponse);
+                System.out.println(bodyResponse);
+                return ResponseEntity.status(bodyResponse.getHttpStatus()).body(bodyResponse);
             }
 
             return ResponseEntity.ok().body(body);
