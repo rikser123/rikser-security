@@ -29,5 +29,4 @@ public class StatusMatrixImpl<T extends Enum<T>> implements StatusMatrix<T> {
         }
         return false;
     }
-
 }

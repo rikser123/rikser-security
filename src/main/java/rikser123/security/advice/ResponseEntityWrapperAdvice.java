@@ -2,7 +2,6 @@ package rikser123.security.advice;
 
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -33,11 +32,11 @@ public class ResponseEntityWrapperAdvice implements ResponseBodyAdvice<Object> {
           ServerHttpRequest request,
           ServerHttpResponse response) {
             if (body instanceof RikserResponseItem<?> bodyResponse) {
-                System.out.println(bodyResponse);
-                return ResponseEntity.status(bodyResponse.getHttpStatus()).body(bodyResponse);
+                var httpStatus = bodyResponse.getHttpStatus();
+                bodyResponse.setHttpStatus(null);
+                return ResponseEntity.status(httpStatus).body(bodyResponse);
             }
 
             return ResponseEntity.ok().body(body);
-
     }
 }

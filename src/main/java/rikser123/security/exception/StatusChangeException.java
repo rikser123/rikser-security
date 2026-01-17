@@ -1,13 +1,13 @@
-package rikser123.security.exception;
+    package rikser123.security.exception;
 
-/**
- * Ошибка при невозможности изменить статус
- *
- */
-public class StatusChangeException extends RuntimeException {
-    private static final String DEFAULT_MESSAGE = "Переход на новый статус невозможен";
+    /**
+     * Ошибка при невозможности изменить статус
+     *
+     */
+    public class StatusChangeException extends RuntimeException {
+        private static final String DEFAULT_MESSAGE = "Переход на новый статус невозможен";
 
-    public StatusChangeException() {
-        super(DEFAULT_MESSAGE);
+        public StatusChangeException() {
+            super(DEFAULT_MESSAGE);
+        }
     }
-}
