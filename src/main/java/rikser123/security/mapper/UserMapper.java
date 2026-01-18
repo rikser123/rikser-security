@@ -1,5 +1,6 @@
 package rikser123.security.mapper;
 
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
@@ -17,7 +18,7 @@ import java.util.stream.Collectors;
 @Mapper(componentModel = "spring")
 @Slf4j
 public abstract class UserMapper {
-    @Autowired
+    @Setter(onMethod = @__({@Autowired}))
     private PasswordEncoder passwordEncoder;
 
     public abstract User mapUser(CreateUserRequestDto dto);

@@ -4,11 +4,11 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import rikser123.security.exception.StatusChangeException;
+import rikser123.bundle.exception.StatusChangeException;
+import rikser123.bundle.service.StatusMatrix;
 import rikser123.security.repository.UserRepository;
 import rikser123.security.repository.entity.User;
 import rikser123.security.repository.entity.UserStatus;
-import rikser123.security.service.StatusMatrix;
 import rikser123.security.service.UserService;
 
 

@@ -2,9 +2,9 @@ package rikser123.security.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import rikser123.bundle.service.StatusMatrix;
+import rikser123.bundle.service.impl.StatusMatrixImpl;
 import rikser123.security.repository.entity.UserStatus;
-import rikser123.security.service.StatusMatrix;
-import rikser123.security.service.impl.StatusMatrixImpl;
 
 import java.util.EnumSet;
 

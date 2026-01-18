@@ -63,10 +63,11 @@ dependencies {
 	runtimeOnly("org.postgresql:postgresql")
 	annotationProcessor("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	testImplementation ("io.projectreactor:reactor-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 	mockitoAgent("org.mockito:mockito-core") { isTransitive = false }
 	annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
-	implementation("rikser123:bundle:0.0.10")
+	implementation("rikser123:bundle:0.0.20")
 	implementation("org.springframework.boot:spring-boot-starter-webflux:4.0.1")
 }
 

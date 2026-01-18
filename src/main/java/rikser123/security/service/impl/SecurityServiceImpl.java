@@ -84,12 +84,11 @@ public class SecurityServiceImpl implements SecurityService {
             .subscribeOn(Schedulers.boundedElastic())
             .flatMap(userOpt -> {
                 if (userOpt.isEmpty()) {
-                    Mono.error(new EntityNotFoundException(String.format("Пользователь с логином %s не найден", userLogin)));
+                    return Mono.error(new EntityNotFoundException(String.format("Пользователь с логином %s не найден", userLogin)));
                 }
 
                 return Mono.just(userOpt.get());
             }).map(user -> {
-
                 authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                         userLogin,
                         requestDto.getPassword()
@@ -116,7 +115,7 @@ public class SecurityServiceImpl implements SecurityService {
             return updatedUser;
         })
         .subscribeOn(Schedulers.boundedElastic())
-                .flatMap(user -> {
+        .flatMap(user -> {
             var existedWithSameLogin = userService.findUserByLoginAndIdIsNot(user.getLogin(), user.getId());
 
             if (existedWithSameLogin.isPresent()) {
