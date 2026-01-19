@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,6 +24,8 @@ import rikser123.security.dto.response.UserDeactivateResponse;
 import rikser123.security.dto.response.UserEmailResponse;
 import rikser123.security.dto.response.UserResponseDto;
 import rikser123.security.service.SecurityService;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/user")
@@ -79,10 +82,7 @@ public class UserController implements UserApi {
 
     @Override
     public Mono<RikserResponseItem<UserResponseDto>> getUser(
-            @Valid
-            @RequestBody
-            RikserRequestItem<UserGetRequestDto> getDto
-    ) {
-      return securityService.getUser(getDto.getData().getId());
+            @PathVariable UUID id) {
+      return securityService.getUser(id);
     }
 }

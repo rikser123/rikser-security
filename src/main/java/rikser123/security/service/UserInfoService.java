@@ -3,30 +3,33 @@ package rikser123.security.service;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 import rikser123.security.repository.UserRepository;
-import rikser123.security.repository.entity.User;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class UserInfoService {
     private final UserRepository userRepository;
-
-    public User getCurrentUser() {
-        var username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return getByUsername(username);
+    public Mono<UserDetails> getCurrentUser() {
+        return ReactiveSecurityContextHolder.getContext()
+                .map(SecurityContext::getAuthentication)
+                .map(data -> data.getName())
+                .flatMap(this::getByUsername);
     }
 
-    public UserDetailsService userDetailsService() {
+    public ReactiveUserDetailsService userDetailsService() {
         return this::getByUsername;
     }
 
-    public User getByUsername(String username) {
-        return userRepository.findUserByLogin(username)
-                .orElseThrow(() -> new EntityNotFoundException("Пользователь не найден"));
+    public Mono<UserDetails> getByUsername(String username) {
+        return Mono.just(userRepository.findUserByLogin(username)
+                .orElseThrow(() -> new EntityNotFoundException("Пользователь не найден")));
 
     }
 }

@@ -53,6 +53,7 @@ public class UserServiceImpl implements UserService {
         return userRepository.findUserByEmailAndIdIsNot(email,id);
     }
 
+
     @Override
     public User changeStatus(User user, UserStatus status) {
         if (user.getStatus().equals(status) || !userStatusMatrix.isAvailable(user.getStatus(), status)) {

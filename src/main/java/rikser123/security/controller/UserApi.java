@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,6 +29,8 @@ import rikser123.security.dto.response.LoginResponseDto;
 import rikser123.security.dto.response.UserDeactivateResponse;
 import rikser123.security.dto.response.UserEmailResponse;
 import rikser123.security.dto.response.UserResponseDto;
+
+import java.util.UUID;
 
 @Tag(name = "API для взаимодействия с пользователми")
 @ApiResponses(value = {
@@ -81,12 +84,10 @@ public interface UserApi {
             RikserRequestItem<UserEmailRequestDto> deactivateDto
     );
 
-    @GetMapping("/get")
+    @GetMapping("/get/{id}")
     @Operation(description = "Получпние пользователя по айди")
     @ResponseStatus(HttpStatus.OK)
     Mono<RikserResponseItem<UserResponseDto>> getUser(
-            @RequestBody
-            @Parameter(description = "Параметры для получения пользователя по айди")
-            RikserRequestItem<UserGetRequestDto> getDto
+            @PathVariable UUID id
     );
 }

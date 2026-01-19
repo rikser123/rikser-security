@@ -7,14 +7,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import org.mockito.Mock;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import rikser123.security.TestData;
@@ -48,7 +48,7 @@ public class SecurityServiceTest {
     private Jwt jwt;
 
     @Mock
-    private AuthenticationManager authenticationManager;
+    private ReactiveAuthenticationManager authenticationManager;
 
     @Mock
     private UserInfoService userInfoService;
@@ -130,10 +130,10 @@ public class SecurityServiceTest {
         userMapper.updateUser(editDto, user);
 
         when(userService.findById(editDto.getId())).thenReturn(user);
-        when(userService.findUserByLoginAndIdIsNot(user.getLogin(), user.getId())).thenReturn(Optional.empty());
-        when(userService.findUserByEmailAndIdIsNot(user.getEmail(), user.getId())).thenReturn(Optional.empty());
+        when(userService.findUserByLogin(user.getLogin())).thenReturn(Optional.empty());
+        when(userService.findUserByEmail(user.getEmail())).thenReturn(Optional.empty());
         when(userService.save(any())).thenReturn(user);
-        when(userInfoService.getCurrentUser()).thenReturn(user);
+        when(userInfoService.getCurrentUser()).thenReturn(Mono.just(user));
 
         StepVerifier.create(securityService.editUser(editDto))
             .assertNext(result -> {
@@ -150,7 +150,7 @@ public class SecurityServiceTest {
         editDto.setId(UUID.randomUUID());
         user.setUserPrivileges(Collections.emptySet());
 
-        when(userInfoService.getCurrentUser()).thenReturn(user);
+        when(userInfoService.getCurrentUser()).thenReturn(Mono.just(user));
 
         StepVerifier.create(securityService.editUser(editDto))
             .verifyError(AccessDeniedException.class);
@@ -175,10 +175,11 @@ public class SecurityServiceTest {
     @Test
     void activateEmail() {
         var dto = new UserEmailRequestDto();
-        dto.setId(UUID.randomUUID());
         var user = TestData.createUser();
+        dto.setId(user.getId());
 
-        when(userInfoService.getCurrentUser()).thenReturn(user);
+        when(userInfoService.getCurrentUser()).thenReturn(Mono.just(user));
+        when(userService.findById(user.getId())).thenReturn(user);
         when(userService.changeStatus(user, UserStatus.EMAIL_ACTIVATED)).thenReturn(user);
 
         StepVerifier.create(securityService.activateEmail(dto))

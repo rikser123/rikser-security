@@ -10,14 +10,13 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.NamedAttributeNode;
-import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
@@ -38,9 +37,7 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @Getter
 @Setter
-@NamedEntityGraph(name = "userPrivileges",
-   attributeNodes = @NamedAttributeNode("userPrivileges")
-)
+@ToString
 public class User implements UserDetails  {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -77,7 +74,7 @@ public class User implements UserDetails  {
     @Column(name = "created", updatable = false)
     private LocalDateTime created;
 
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, orphanRemoval = true, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, orphanRemoval = true, cascade = CascadeType.ALL)
     private Set<UserPrivilege> userPrivileges = new HashSet<>();
 
     public Set<Privilege> getPrivileges() {
@@ -124,19 +121,6 @@ public class User implements UserDetails  {
     @JsonIgnore
     public boolean isEnabled() {
         return true;
-    }
-
-    @Override
-    public String toString() {
-        return "user " +
-                "id: " + id +
-                "name: " + firstName +
-                "lastName" + lastName +
-                "middleName" + middleName +
-                "login: " + login +
-                "email: " + email +
-                "status: " + status +
-                "privileges: " + getPrivileges();
     }
 }
 

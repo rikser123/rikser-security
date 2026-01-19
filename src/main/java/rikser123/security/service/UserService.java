@@ -43,12 +43,11 @@ public interface UserService {
      */
     User findById(UUID id);
 
-    /**
-     * Поиск пользователя по логину с отличным id
+     /** Поиск пользователя по логину с отличным id
      * @param login Login пользователя
      * @param id Id пользователя
      *
-     * @return Optional пользователя
+             * @return Optional пользователя
      */
     Optional<User> findUserByLoginAndIdIsNot(String login, UUID id);
 

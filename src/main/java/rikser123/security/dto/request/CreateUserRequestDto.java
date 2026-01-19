@@ -72,7 +72,7 @@ public class CreateUserRequestDto {
     @NotNull(message = "Значение BirthDate не должно быть пустым")
     private LocalDate birthDate;
 
-    @NotEmpty
+    @NotEmpty(message = "Privileges не должно быть пустым")
     @Schema(description = "Список привилегий пользователя", example = "[EDIT, CREATE]")
     private List<Privilege> privileges = new ArrayList<>();
 }

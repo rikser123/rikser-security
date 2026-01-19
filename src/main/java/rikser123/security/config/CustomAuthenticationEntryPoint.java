@@ -1,36 +1,58 @@
 package rikser123.security.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.server.ServerAuthenticationEntryPoint;
+import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
 import rikser123.bundle.utils.RikserResponseUtils;
 
-import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
-/**
- * Класс для для преобразования стандарного ответа от SpringSecurity в необходимый формат
- *
- */
 @Slf4j
-public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
-    @Qualifier("customObjectMapper")
-    private static ObjectMapper jsonMapper = new ObjectMapper();
+@Component
+public class CustomAuthenticationEntryPoint implements ServerAuthenticationEntryPoint {
+
+    private final ObjectMapper objectMapper;
+
+    public CustomAuthenticationEntryPoint(@Qualifier("customObjectMapper") ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     @Override
-    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException {
-        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.setCharacterEncoding("UTF-8");
+    public Mono<Void> commence(ServerWebExchange exchange, AuthenticationException authException) {
+        return Mono.defer(() -> {
+            try {
+                var responseBody = RikserResponseUtils.createResponse(
+                        "Доступ к запрашиваемому ресурсу запрещен",
+                        HttpStatus.FORBIDDEN
+                );
 
-        var responseBody = RikserResponseUtils.createResponse("Доступ к запрашиваемому ресурсу запрещен", HttpStatus.FORBIDDEN);
-        var jsonText = jsonMapper.writer().writeValueAsString(responseBody);
+                String jsonText = objectMapper.writer().writeValueAsString(responseBody);
+                byte[] bytes = jsonText.getBytes(StandardCharsets.UTF_8);
 
-        response.getWriter().write(jsonText);
+                exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
+                exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
+
+                DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(bytes);
+                return exchange.getResponse().writeWith(Mono.just(buffer));
+
+            } catch (Exception e) {
+                log.error("Error writing authentication error response", e);
+
+                // Fallback: простой текст в случае ошибки
+                String errorMessage = "{\"error\":\"Authentication failed\"}";
+                DataBuffer buffer = exchange.getResponse().bufferFactory()
+                        .wrap(errorMessage.getBytes(StandardCharsets.UTF_8));
+
+                return exchange.getResponse().writeWith(Mono.just(buffer));
+            }
+        });
     }
 }

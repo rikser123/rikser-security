@@ -54,6 +54,32 @@ repositories {
 	}
 }
 
+sourceSets {
+	create("integrationTest") {
+		java {
+			srcDir("src/integrationTest/java")
+			compileClasspath += sourceSets.main.get().output
+			runtimeClasspath += sourceSets.main.get().output
+		}
+		resources {
+			srcDir("src/integrationTest/resources")
+		}
+	}
+}
+configurations {
+	// Конфигурация для integrationTest
+	val integrationTestImplementation by getting {
+		extendsFrom(configurations.testImplementation.get())
+		extendsFrom(configurations.implementation.get())
+	}
+
+	val integrationTestRuntimeOnly by getting {
+		extendsFrom(configurations.testRuntimeOnly.get())
+		extendsFrom(configurations.runtimeOnly.get())
+	}
+}
+
+
 val mockitoAgent = configurations.create("mockitoAgent")
 
 dependencies {
@@ -68,12 +94,42 @@ dependencies {
 	mockitoAgent("org.mockito:mockito-core") { isTransitive = false }
 	annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
 	implementation("rikser123:bundle:0.0.20")
-	implementation("org.springframework.boot:spring-boot-starter-webflux:4.0.1")
+	implementation("org.springframework.boot:spring-boot-starter-webflux")
+	testImplementation("org.springframework.boot:spring-boot-test-autoconfigure")
+	implementation("org.springframework.boot:spring-boot-starter-security")
+	testImplementation("org.mock-server:mockserver-netty:5.15.0")
+	testImplementation("org.mock-server:mockserver-client-java:5.15.0")
+	testImplementation("org.springframework.security:spring-security-test")
+	testImplementation("org.springframework.boot:spring-boot-starter-webflux")
+	testImplementation("io.projectreactor:reactor-test")
+}
+
+
+tasks.withType<ProcessResources>().configureEach {
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.processResources {
+	duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
 tasks.withType<Test> {
 	useJUnitPlatform()
 	jvmArgs("-javaagent:${mockitoAgent.asPath}")
+}
+
+tasks.register<Test>("integrationTest") {
+	description = "Runs integration tests."
+	group = "verification"
+
+	testClassesDirs = sourceSets["integrationTest"].output.classesDirs
+	classpath = sourceSets["integrationTest"].runtimeClasspath
+
+	useJUnitPlatform()
+
+	testLogging {
+		events("passed", "skipped", "failed")
+	}
 }
 
 
