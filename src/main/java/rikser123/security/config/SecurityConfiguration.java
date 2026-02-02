@@ -39,9 +39,10 @@ public class SecurityConfiguration {
     private final UserInfoService userService;
 
     @Bean
-    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
+    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http, ReactiveAuthenticationManager reactiveAuthenticationManager) {
         return http
                 .csrf(csrf -> csrf.disable())
+                .authenticationManager(reactiveAuthenticationManager)
                 .httpBasic(httpBasic -> httpBasic.disable())
                 .anonymous(anonymous -> anonymous.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -64,7 +65,7 @@ public class SecurityConfiguration {
                 )
                 .addFilterBefore(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 .exceptionHandling(handling -> handling
-                        .authenticationEntryPoint(authenticationEntryPoint)
+                    .authenticationEntryPoint(authenticationEntryPoint)
                 )
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
                 .formLogin(form -> form.disable())

@@ -1,7 +1,7 @@
 package rikser123.security.component;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.extern.slf4j.Slf4j;
@@ -37,15 +37,6 @@ public class Jwt {
                 .expiration(new Date(System.currentTimeMillis() + expirationMs))
                 .signWith(SignatureAlgorithm.HS256, secret)
                 .compact();
-    }
-
-    public boolean isTokenValid(String token) {
-        try {
-            Jwts.parser().setSigningKey(secret).build().parseClaimsJws(token);
-            return true;
-        } catch (JwtException | IllegalArgumentException e) {
-            return false;
-        }
     }
 
     public String extractUserName(String token) {

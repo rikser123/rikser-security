@@ -1,8 +1,14 @@
 package rikser123.security.filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
@@ -12,12 +18,15 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
+import rikser123.bundle.utils.RikserResponseUtils;
 import rikser123.security.service.UserInfoService;
 import rikser123.security.component.Jwt;
 import rikser123.security.repository.entity.User;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Фильтр аутентификации JWT для Spring WebFlux Security
@@ -31,8 +40,31 @@ public class JwtAuthenticationFilter implements WebFilter {
     private final Jwt jwt;
     private final UserInfoService userService;
 
+    @Qualifier("customObjectMapper")
+    private final ObjectMapper objectMapper;
+    private final Map<String, Boolean> processedRequests =  new ConcurrentHashMap<>();
+
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+        var requestId = exchange.getRequest().getId();
+
+        if (processedRequests.putIfAbsent(requestId, true) != null) {
+            return chain.filter(exchange);
+        }
+
+        return authenticate(exchange, chain)
+            .doFinally(signal -> {
+                processedRequests.remove(requestId);
+        });
+    }
+
+    /**
+     * Обработка json web token
+     * @param exchange Запрос
+     * @param chain Фильтры spring security
+     *
+     */
+    private Mono<Void> authenticate(ServerWebExchange exchange, WebFilterChain chain) {
         var authHeader = exchange.getRequest().getHeaders().getFirst(HEADER_NAME);
 
         if (StringUtils.isEmpty(authHeader) || !authHeader.startsWith(BEARER_PREFIX)) {
@@ -40,36 +72,69 @@ public class JwtAuthenticationFilter implements WebFilter {
         }
 
         var token = authHeader.substring(BEARER_PREFIX.length());
+        var username = StringUtils.EMPTY;
 
-        var username = jwt.extractUserName(token);
+        try {
+            username = jwt.extractUserName(token);
+        } catch (MalformedJwtException e) {
+            return sendErrorResponse(exchange, HttpStatus.BAD_REQUEST, "Некорректный формат JWT токена");
+        } catch (ExpiredJwtException e) {
+            return sendErrorResponse(exchange, HttpStatus.BAD_REQUEST, "Срок действия токена истек");
+        } catch (Exception e) {
+            return sendErrorResponse(exchange, HttpStatus.BAD_REQUEST, "Ошибка валидации токена");
+        }
+
 
         if (StringUtils.isEmpty(username)) {
             log.warn("JWT token does not contain username");
             return chain.filter(exchange);
         }
 
-        if (!jwt.isTokenValid(token)) {
-            log.warn("Invalid JWT token for user: {}", username);
-            return chain.filter(exchange);
-        }
-
         return userService.getByUsername(username)
-                .flatMap(userDetails -> {
-                    var authentication = createAuthenticationToken(userDetails);
+            .flatMap(userDetails -> {
+                var authentication = createAuthenticationToken(userDetails);
 
-                    log.debug("User authenticated successfully: {}", username);
+                return chain.filter(exchange)
+                    .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication));
+            })
+            .switchIfEmpty(chain.filter(exchange))
+            .onErrorResume(e -> {
+                log.error("Error during authentication for user: {}", "111", e);
+                return chain.filter(exchange);
+            });
+    }
 
-                    return chain.filter(exchange)
-                            .contextWrite(ReactiveSecurityContextHolder.withAuthentication(authentication));
-                })
-                .switchIfEmpty(Mono.defer(() -> {
-                    log.warn("User not found: {}", username);
-                    return chain.filter(exchange);
-                }))
-                .onErrorResume(e -> {
-                    log.error("Error during authentication for user: {}", username, e);
-                    return chain.filter(exchange);
-                });
+    /**
+     * Обработка ошибок токена
+     * @param exchange Запрос
+     * @param status Статус запроса
+     * @param message Сообщение об ошибке
+     *
+     */
+    private Mono<Void> sendErrorResponse(ServerWebExchange exchange, HttpStatus status, String message) {
+        return Mono.fromCallable(() -> {
+            exchange.getResponse().setStatusCode(status);
+            exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
+
+            var responseBody = RikserResponseUtils.createResponse(
+                    message,
+                    status
+            );
+
+            var jsonText = objectMapper.writer().writeValueAsString(responseBody);
+            var bytes = jsonText.getBytes(StandardCharsets.UTF_8);
+            return exchange.getResponse().bufferFactory().wrap(bytes);
+        }).flatMap(buffer -> exchange.getResponse().writeWith(Mono.just(buffer)))
+        .onErrorResume(e -> {
+            log.error("Error writing authentication error response", e);
+
+            // Fallback: простой текст в случае ошибки
+            var errorMessage = "{\"error\":\"Authentication failed\"}";
+            var buffer = exchange.getResponse().bufferFactory()
+                .wrap(errorMessage.getBytes(StandardCharsets.UTF_8));
+
+            return exchange.getResponse().writeWith(Mono.just(buffer));
+        });
     }
 
     /**
@@ -78,10 +143,10 @@ public class JwtAuthenticationFilter implements WebFilter {
     private UsernamePasswordAuthenticationToken createAuthenticationToken(UserDetails userDetails) {
         // Проверяем, является ли userDetails экземпляром нашего User
         if (userDetails instanceof User) {
-            User user = (User) userDetails;
+            var user = (User) userDetails;
             List<SimpleGrantedAuthority> authorities = user.getPrivileges().stream()
-                    .map(privilege -> new SimpleGrantedAuthority(privilege.name()))
-                    .collect(Collectors.toList());
+                .map(privilege -> new SimpleGrantedAuthority(privilege.name()))
+                .toList();
 
             return new UsernamePasswordAuthenticationToken(
                     user,

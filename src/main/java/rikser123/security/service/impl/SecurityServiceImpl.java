@@ -64,12 +64,12 @@ public class SecurityServiceImpl implements SecurityService {
                 })
                 .subscribeOn(Schedulers.boundedElastic())
                 .map(userService::save)
-                .doOnNext(user -> {
+                .flatMap(user ->
                     authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                             requestDto.getLogin(),
                             requestDto.getPassword()
-                    ));
-                })
+                    )).map(data -> user)
+                )
                 .map(user -> {
                     var token = jwt.generateToken(user);
 
@@ -93,12 +93,12 @@ public class SecurityServiceImpl implements SecurityService {
                     }
 
                     return Mono.just(userOpt.get());
-                }).doOnNext(user -> {
+                }).flatMap(user ->
                     authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                             userLogin,
                             requestDto.getPassword()
-                    ));
-                }).map(user -> {
+                    )).map(data -> user)
+                ).map(user -> {
                     var token = jwt.generateToken(user);
                     var responseDto = new LoginResponseDto();
                     responseDto.setToken(token);

@@ -9,13 +9,14 @@ import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-import rikser123.security.repository.UserRepository;
+import reactor.core.scheduler.Schedulers;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class UserInfoService {
-    private final UserRepository userRepository;
+    private final UserService userService;
+
     public Mono<UserDetails> getCurrentUser() {
         return ReactiveSecurityContextHolder.getContext()
                 .map(SecurityContext::getAuthentication)
@@ -28,8 +29,14 @@ public class UserInfoService {
     }
 
     public Mono<UserDetails> getByUsername(String username) {
-        return Mono.just(userRepository.findUserByLogin(username)
-                .orElseThrow(() -> new EntityNotFoundException("Пользователь не найден")));
+       return Mono.fromCallable(() -> userService.findUserByLogin(username))
+            .subscribeOn(Schedulers.boundedElastic())
+            .flatMap(userOpt -> {
+                if (userOpt.isPresent()) {
+                    return Mono.just(userOpt.get());
+                }
 
+                return Mono.error(new EntityNotFoundException("Пользователь не найден"));
+            });
     }
 }
