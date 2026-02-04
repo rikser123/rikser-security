@@ -43,6 +43,7 @@ public class AuthenticationEntryPoint implements ServerAuthenticationEntryPoint 
                 exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
                 Optional.ofNullable(exchange)
                     .map(ServerWebExchange::getResponse)
+                    .filter(response -> !response.isCommitted())
                     .map(HttpMessage::getHeaders)
                     .ifPresent(headers -> {
                         headers.setContentType(MediaType.APPLICATION_JSON);

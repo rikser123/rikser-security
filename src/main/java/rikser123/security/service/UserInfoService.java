@@ -20,8 +20,7 @@ public class UserInfoService {
     public Mono<UserDetails> getCurrentUser() {
         return ReactiveSecurityContextHolder.getContext()
                 .map(SecurityContext::getAuthentication)
-                .map(data -> data.getName())
-                .flatMap(this::getByUsername);
+                .map(data -> (UserDetails) data.getPrincipal());
     }
 
     public ReactiveUserDetailsService userDetailsService() {

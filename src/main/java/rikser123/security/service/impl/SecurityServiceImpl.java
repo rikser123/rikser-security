@@ -5,7 +5,6 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
@@ -112,7 +111,7 @@ public class SecurityServiceImpl implements SecurityService {
 
     @Override
     public Mono<RikserResponseItem<UserResponseDto>> editUser(EditUserDto userDto) {
-        return  checkEditAccess(userDto.getId())
+        return  checkAccess(userDto.getId(), Privilege.USER_EDIT)
                 .map(data -> {
                     var updatedUser = userService.findById(userDto.getId());
                     userMapper.updateUser(userDto, updatedUser);
@@ -167,7 +166,7 @@ public class SecurityServiceImpl implements SecurityService {
 
     @Override
     public Mono<RikserResponseItem<UserEmailResponse>> activateEmail(UserEmailRequestDto requestDto) {
-        return checkEditAccess(requestDto.getId())
+        return checkAccess(requestDto.getId(), Privilege.USER_EDIT)
                 .map(data -> {
                     var user = userService.findById(requestDto.getId());
                     userService.changeStatus(user, UserStatus.EMAIL_ACTIVATED);
@@ -184,7 +183,9 @@ public class SecurityServiceImpl implements SecurityService {
 
     @Override
     public Mono<RikserResponseItem<UserResponseDto>> getUser(UUID id) {
-        return Mono.fromCallable(() -> userService.findById(id))
+        return checkAccess(id, Privilege.USER_VIEW)
+                .publishOn(Schedulers.boundedElastic())
+                .map(data -> userService.findById(id))
                 .map(user -> {
                     var userDto = userMapper.mapUserToDto(user);
                     return RikserResponseUtils.createResponse(userDto);
@@ -195,12 +196,12 @@ public class SecurityServiceImpl implements SecurityService {
      * Проверка привилегий на редактирование пользователя
      * @param userId Id пользователя
      */
-    private Mono<User> checkEditAccess(UUID userId) {
+    private Mono<User> checkAccess(UUID userId, Privilege privilege) {
         return userInfoService.getCurrentUser()
             .flatMap(userDetails -> {
                 User user = (User) userDetails;
 
-                if (!userId.equals(user.getId()) && !user.getPrivileges().contains(Privilege.USER_EDIT)) {
+                if (!userId.equals(user.getId()) && !user.getPrivileges().contains(privilege)) {
                     return Mono.error(new AccessDeniedException("Доступ запрещен"));
                 }
 

@@ -5,8 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.web.reactive.server.WebTestClient;
 import rikser123.security.BaseConfig;
 import rikser123.security.IntegrationUtils;
 import rikser123.security.TestData;
@@ -20,6 +18,7 @@ import rikser123.security.repository.entity.Privilege;
 import rikser123.security.repository.entity.User;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -249,13 +248,11 @@ public class UserApiTest extends BaseConfig {
     void getUser() {
         var user = TestData.createUser();
         var savedUser = userRepository.save(user);
-        var dto = new UserEmailResponse();
-        dto.setId(user.getId());
 
         var token = generateAuthHeader(savedUser);
 
         client.get().uri(uriBuilder -> uriBuilder
-        .path("/api/v1/user/get/" + user.getId())
+        .path("/api/v1/user/get/" + savedUser.getId())
         .build())
         .header("Authorization", token)
         .exchange()
@@ -263,7 +260,33 @@ public class UserApiTest extends BaseConfig {
         .expectBody()
         .consumeWith(System.out::println)
         .jsonPath("$.result").isEqualTo(true)
-        .jsonPath("$.data.id").isEqualTo(dto.getId());
+        .jsonPath("$.data.id").isEqualTo(savedUser.getId());
+    }
+
+    @Test
+    void canNotViewAnotherUser() {
+        var user = TestData.createUser();
+        user.setUserPrivileges(Collections.emptySet());
+        var savedUser1 = userRepository.save(user);
+
+        var user2 = TestData.createUser();
+        user2.setLogin("login123");
+        user2.setEmail("email123");
+        user2.setUserPrivileges(Collections.emptySet());
+        var savedUser2 = userRepository.save(user2);
+
+        var token = generateAuthHeader(savedUser1);
+
+        client.get().uri(uriBuilder -> uriBuilder
+        .path("/api/v1/user/get/" + savedUser2.getId())
+        .build())
+        .header("Authorization", token)
+        .exchange()
+        .expectStatus().isForbidden()
+        .expectBody()
+        .consumeWith(System.out::println)
+        .jsonPath("$.result").isEqualTo(false)
+        .jsonPath("$.message").isEqualTo("Доступ к запрашиваемому ресурсу запрещен");
     }
 
     private static CreateUserRequestDto createValidUser() {
