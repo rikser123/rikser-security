@@ -3,6 +3,7 @@ package rikser123.security.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpMessage;
 import org.springframework.http.HttpStatus;
@@ -33,7 +34,7 @@ public class AuthenticationEntryPoint implements ServerAuthenticationEntryPoint 
         return Mono.defer(() -> {
             try {
                 var responseBody = RikserResponseUtils.createResponse(
-                        "Доступ к запрашиваемому ресурсу запрещен",
+                        StringUtils.isNotEmpty(authException.getMessage()) ? authException.getMessage() : "Доступ к запрашиваемому ресурсу запрещен",
                         HttpStatus.FORBIDDEN
                 );
 

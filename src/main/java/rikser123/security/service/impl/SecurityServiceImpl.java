@@ -4,10 +4,13 @@ import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -43,6 +46,7 @@ public class SecurityServiceImpl implements SecurityService {
     private final ReactiveAuthenticationManager authenticationManager;
     private final UserInfoService userInfoService;
     private final UserService userService;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public Mono<RikserResponseItem<CreateUserResponseDto>> register(CreateUserRequestDto requestDto) {
@@ -91,7 +95,13 @@ public class SecurityServiceImpl implements SecurityService {
                         return Mono.error(new EntityNotFoundException(String.format("Пользователь с логином %s не найден", userLogin)));
                     }
 
-                    return Mono.just(userOpt.get());
+                    var user = userOpt.get();
+                    var isMatches = passwordEncoder.matches(requestDto.getPassword(),  user.getPassword());
+                    if (!isMatches) {
+                        return Mono.error(new BadCredentialsException("Неверный пароль!"));
+                    }
+
+                    return Mono.just(user);
                 }).flatMap(user ->
                     authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                             userLogin,
@@ -106,6 +116,12 @@ public class SecurityServiceImpl implements SecurityService {
                     responseDto.setUser(userDto);
 
                     return RikserResponseUtils.createResponse(responseDto);
+                }).onErrorResume(BadCredentialsException.class, exception -> {
+                    log.warn("Ошибка авторизации", exception);
+                    var response = new RikserResponseItem<LoginResponseDto>();
+                    response.setMessage(exception.getMessage());
+                    response.setHttpStatus(HttpStatus.UNAUTHORIZED);
+                    return Mono.just(response);
                 });
     }
 

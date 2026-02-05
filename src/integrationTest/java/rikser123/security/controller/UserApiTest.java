@@ -143,6 +143,28 @@ public class UserApiTest extends BaseConfig {
     }
 
     @Test
+    void loginWithWrongPassword() {
+        var user = TestData.createUser();
+        var rawPassword = user.getPassword();
+        user.setPassword(passwordEncoder.encode(rawPassword));
+        userRepository.save(user);
+        var loginDto = new LoginRequestDto();
+        loginDto.setLogin(user.getLogin());
+        loginDto.setPassword("password12345");
+
+        client.post().uri(uriBuilder -> uriBuilder
+        .path("/api/v1/user/login")
+        .build())
+        .bodyValue(IntegrationUtils.buildRequest(loginDto))
+        .exchange()
+        .expectStatus().isEqualTo(HttpStatus.UNAUTHORIZED)
+        .expectBody()
+        .consumeWith(System.out::println)
+        .jsonPath("$.result").isEqualTo(false)
+        .jsonPath("$.message").isEqualTo("Неверный пароль!");
+    }
+
+    @Test
     void editUser() {
         var user = TestData.createUser();
         var savedUser = userRepository.save(user);
