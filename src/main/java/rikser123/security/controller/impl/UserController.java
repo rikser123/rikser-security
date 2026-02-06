@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
@@ -57,9 +58,10 @@ public class UserController implements UserApi {
     public Mono<RikserResponseItem<UserResponseDto>> edit(
             @Valid
             @RequestBody
-            RikserRequestItem<EditUserDto> editDto
+            RikserRequestItem<EditUserDto> editDto,
+            @RequestHeader("Authorization") String authToken
     ) {
-        return securityService.editUser(editDto.getData());
+        return securityService.editUser(editDto.getData(), authToken);
     }
 
     @Override

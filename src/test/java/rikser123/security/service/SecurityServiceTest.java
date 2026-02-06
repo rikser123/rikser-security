@@ -11,6 +11,8 @@ import static org.mockito.Mockito.when;
 import org.mockito.Mock;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import reactor.core.publisher.Mono;
@@ -29,6 +31,7 @@ import rikser123.security.service.impl.SecurityServiceImpl;
 import static org.assertj.core.api.Assertions.assertThat;
 
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
@@ -58,12 +61,24 @@ public class SecurityServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private BlackListService blackListService;
+
+
     @BeforeEach
     void init() {
         userMapper = new UserMapperImpl();
         userMapper.setPasswordEncoder(passwordEncoder);
 
-        securityService = new SecurityServiceImpl(userMapper, jwt, authenticationManager, userInfoService, userService);
+        securityService = new SecurityServiceImpl(
+            userMapper,
+            jwt,
+            authenticationManager,
+            userInfoService,
+            userService,
+            passwordEncoder,
+            blackListService
+        );
     }
 
     @Test
@@ -74,6 +89,7 @@ public class SecurityServiceTest {
         when(userService.findUserByLogin(userDto.getLogin())).thenReturn(Optional.empty());
         when(userService.findUserByEmail(userDto.getEmail())).thenReturn(Optional.empty());
         when(userService.save(any())).thenReturn(user);
+        when(authenticationManager.authenticate((any()))).thenReturn(Mono.just(new AuthenticationMock()));
 
         StepVerifier.create(securityService.register(userDto))
             .assertNext(result -> {
@@ -101,6 +117,8 @@ public class SecurityServiceTest {
         var user = TestData.createUser();
 
         when(userService.findUserByLogin(loginDto.getLogin())).thenReturn(Optional.of(user));
+        when(authenticationManager.authenticate((any()))).thenReturn(Mono.just(new AuthenticationMock()));
+        when(passwordEncoder.matches(any(), any())).thenReturn(true);
 
         StepVerifier.create(securityService.login(loginDto))
             .assertNext(result -> {
@@ -133,8 +151,9 @@ public class SecurityServiceTest {
         when(userService.findUserByEmail(user.getEmail())).thenReturn(Optional.empty());
         when(userService.save(any())).thenReturn(user);
         when(userInfoService.getCurrentUser()).thenReturn(Mono.just(user));
+        when(authenticationManager.authenticate((any()))).thenReturn(Mono.just(new AuthenticationMock()));
 
-        StepVerifier.create(securityService.editUser(editDto))
+        StepVerifier.create(securityService.editUser(editDto, "Bearer 12345"))
             .assertNext(result -> {
                 assertThat(result.getData().getLogin()).isEqualTo(editDto.getLogin());
                 assertThat(result.getData().getEmail()).isEqualTo(editDto.getEmail());
@@ -151,7 +170,7 @@ public class SecurityServiceTest {
 
         when(userInfoService.getCurrentUser()).thenReturn(Mono.just(user));
 
-        StepVerifier.create(securityService.editUser(editDto))
+        StepVerifier.create(securityService.editUser(editDto, "Bearer 12345"))
             .verifyError(AccessDeniedException.class);
     }
 
@@ -192,10 +211,50 @@ public class SecurityServiceTest {
         var user = TestData.createUser();
 
         when(userService.findById(user.getId())).thenReturn(user);
+        when(userInfoService.getCurrentUser()).thenReturn(Mono.just(user));
+
 
         StepVerifier.create(securityService.getUser(user.getId()))
             .assertNext(result -> {
                 assertThat(result.getData().getId()).isEqualTo(user.getId());
             }).verifyComplete();
+    }
+
+    private static class AuthenticationMock implements Authentication {
+
+        @Override
+        public Collection<? extends GrantedAuthority> getAuthorities() {
+            return null;
+        }
+
+        @Override
+        public Object getCredentials() {
+            return null;
+        }
+
+        @Override
+        public Object getDetails() {
+            return null;
+        }
+
+        @Override
+        public Object getPrincipal() {
+            return null;
+        }
+
+        @Override
+        public boolean isAuthenticated() {
+            return false;
+        }
+
+        @Override
+        public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException {
+
+        }
+
+        @Override
+        public String getName() {
+            return null;
+        }
     }
 }

@@ -6,7 +6,6 @@ import io.jsonwebtoken.MalformedJwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -39,8 +38,6 @@ public class JwtAuthenticationFilter implements WebFilter {
     public static final String HEADER_NAME = "Authorization";
     private final Jwt jwt;
     private final UserInfoService userService;
-
-    @Qualifier("customObjectMapper")
     private final ObjectMapper objectMapper;
     private final Map<String, Boolean> processedRequests =  new ConcurrentHashMap<>();
 

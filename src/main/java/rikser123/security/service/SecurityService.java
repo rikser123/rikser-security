@@ -36,9 +36,10 @@ public interface SecurityService {
     /**
      * Редактирование пользователя
      * @param userDto {@link EditUserDto}
+     * @param oldToken Токен запроса
      *
      * @return Ответ на редаиткрование пользователя     */
-    Mono<RikserResponseItem<UserResponseDto>> editUser(EditUserDto userDto);
+    Mono<RikserResponseItem<UserResponseDto>> editUser(EditUserDto userDto, String oldToken);
     /**
      * Деактивация пользователя
      * @param requestDto {@link UserDeactivateRequestDto}

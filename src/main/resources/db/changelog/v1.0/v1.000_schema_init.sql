@@ -19,3 +19,10 @@ CREATE TABLE user_privilege (
     created TIMESTAMP,
     updated TIMESTAMP
 );
+
+CREATE TABLE black_list_tokens (
+   id UUID PRIMARY KEY,
+   user_id UUID NOT NULL,
+   token VARCHAR NOT NULL,
+   created TIMESTAMP
+);

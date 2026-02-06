@@ -53,4 +53,7 @@ public class UserResponseDto {
 
     @Schema(description = "Время обновления")
     private LocalDateTime updated;
+
+    @Schema(description = "Jwt token")
+    private String token;
 }

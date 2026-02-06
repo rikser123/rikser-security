@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import reactor.core.publisher.Mono;
@@ -62,7 +63,8 @@ public interface UserApi {
     Mono<RikserResponseItem<UserResponseDto>> edit(
             @RequestBody
             @Parameter(description = "Параметры для редактирования пользователя", required = true)
-            RikserRequestItem<EditUserDto> editDto
+            RikserRequestItem<EditUserDto> editDto,
+            @RequestHeader("Authorization") String authToken
     );
 
     @PatchMapping("/deactivate")

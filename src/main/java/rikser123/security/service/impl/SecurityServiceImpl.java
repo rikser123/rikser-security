@@ -30,12 +30,15 @@ import rikser123.security.mapper.UserMapper;
 import rikser123.security.repository.entity.Privilege;
 import rikser123.security.repository.entity.User;
 import rikser123.security.repository.entity.UserStatus;
+import rikser123.security.service.BlackListService;
 import rikser123.security.service.SecurityService;
 import rikser123.security.service.UserInfoService;
 import rikser123.security.service.UserService;
 import rikser123.security.component.Jwt;
 
+import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 @AllArgsConstructor
@@ -47,6 +50,9 @@ public class SecurityServiceImpl implements SecurityService {
     private final UserInfoService userInfoService;
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
+    private final BlackListService blackListService;
+
+    public static final String BEARER_PREFIX = "Bearer ";
 
     @Override
     public Mono<RikserResponseItem<CreateUserResponseDto>> register(CreateUserRequestDto requestDto) {
@@ -68,10 +74,7 @@ public class SecurityServiceImpl implements SecurityService {
                 .subscribeOn(Schedulers.boundedElastic())
                 .map(userService::save)
                 .flatMap(user ->
-                    authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                            requestDto.getLogin(),
-                            requestDto.getPassword()
-                    )).map(data -> user)
+                    setAuthentication(requestDto.getLogin(), requestDto.getPassword()).thenReturn(user)
                 )
                 .map(user -> {
                     var token = jwt.generateToken(user);
@@ -103,10 +106,7 @@ public class SecurityServiceImpl implements SecurityService {
 
                     return Mono.just(user);
                 }).flatMap(user ->
-                    authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                            userLogin,
-                            requestDto.getPassword()
-                    )).map(data -> user)
+                    setAuthentication(requestDto.getLogin(), requestDto.getPassword()).thenReturn(user)
                 ).map(user -> {
                     var token = jwt.generateToken(user);
                     var responseDto = new LoginResponseDto();
@@ -126,46 +126,55 @@ public class SecurityServiceImpl implements SecurityService {
     }
 
     @Override
-    public Mono<RikserResponseItem<UserResponseDto>> editUser(EditUserDto userDto) {
-        return  checkAccess(userDto.getId(), Privilege.USER_EDIT)
-                .map(data -> {
-                    var updatedUser = userService.findById(userDto.getId());
-                    userMapper.updateUser(userDto, updatedUser);
-                    return updatedUser;
-                })
-                .subscribeOn(Schedulers.boundedElastic())
-                .flatMap(user -> {
-                    var existedWithSameLogin = userService.findUserByLoginAndIdIsNot(user.getLogin(), user.getId());
+    public Mono<RikserResponseItem<UserResponseDto>> editUser(EditUserDto userDto, String oldToken) {
+        var oldLogin = new AtomicReference<>("");
+        Objects.requireNonNull(oldToken);
 
-                    if (existedWithSameLogin.isPresent()) {
-                        return Mono.error(new EntityExistsException(String.format("Пользователь с логином %s уже зарегистрирован", user.getLogin())));
-                    }
+        return checkAccess(userDto.getId(), Privilege.USER_EDIT)
+            .map(data -> {
+                var updatedUser = userService.findById(userDto.getId());
+                oldLogin.set(updatedUser.getLogin());
+                userMapper.updateUser(userDto, updatedUser);
+                return updatedUser;
+            })
+            .subscribeOn(Schedulers.boundedElastic())
+            .flatMap(user -> {
+                var existedWithSameLogin = userService.findUserByLoginAndIdIsNot(user.getLogin(), user.getId());
 
-                    return Mono.just(user);
-                }).flatMap(user -> {
-                    var existedWithSameEmail = userService.findUserByEmailAndIdIsNot(user.getEmail(), user.getId());
+                if (existedWithSameLogin.isPresent()) {
+                    return Mono.error(new EntityExistsException(String.format("Пользователь с логином %s уже зарегистрирован", user.getLogin())));
+                }
 
-                    if (existedWithSameEmail.isPresent()) {
-                        return Mono.error(new EntityExistsException(String.format("Пользователь с email %s уже зарегистрирован", user.getEmail())));
-                    }
+                return Mono.just(user);
+            }).flatMap(user -> {
+                var existedWithSameEmail = userService.findUserByEmailAndIdIsNot(user.getEmail(), user.getId());
 
-                    return Mono.just(user);
-                })
-                .map(userService::save)
-                .doOnNext(user -> {
-                    var auth = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                            user.getLogin(),
-                            user.getPassword()
-                    ));
-                    var context =  ReactiveSecurityContextHolder.getContext();
-                    Mono.zip(auth, context).doOnNext(tuple -> {
-                        tuple.getT2().setAuthentication(tuple.getT1());
-                    });
-                })
-                .map(user -> {
-                    var responseDto = userMapper.mapUserToDto(user);
-                    return RikserResponseUtils.createResponse(responseDto);
-                });
+                if (existedWithSameEmail.isPresent()) {
+                    return Mono.error(new EntityExistsException(String.format("Пользователь с email %s уже зарегистрирован", user.getEmail())));
+                }
+
+                return Mono.just(user);
+            })
+            .map(userService::save)
+            .flatMap(user -> {
+                var isLoginEqual = user.getLogin().equals(oldLogin.get());
+                var responseDto = userMapper.mapUserToDto(user);
+
+                if (isLoginEqual) {
+                    return Mono.just(responseDto);
+                }
+
+                var token = jwt.generateToken(user);
+                responseDto.setToken(token);
+
+                if (oldToken.startsWith(BEARER_PREFIX)) {
+                    var oldTokenContent = oldToken.substring(BEARER_PREFIX.length());
+                    blackListService.addToken(oldTokenContent, user.getId());
+                }
+
+                return setAuthentication(userDto.getLogin(), userDto.getPassword()).thenReturn(responseDto);
+            })
+            .map(RikserResponseUtils::createResponse);
     }
 
     @Override
@@ -206,6 +215,24 @@ public class SecurityServiceImpl implements SecurityService {
                     var userDto = userMapper.mapUserToDto(user);
                     return RikserResponseUtils.createResponse(userDto);
                 });
+    }
+
+    /**
+     * Установка аутентикации в контекст
+     * @param login логин пользователя
+     * @param password пароль пользователя
+     */
+    private Mono<Void> setAuthentication(String login, String password) {
+        var auth = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+            login,
+            password
+        ));
+        var context =  ReactiveSecurityContextHolder.getContext();
+        return Mono.zip(auth, context).flatMap(tuple -> {
+            tuple.getT2().setAuthentication(tuple.getT1());
+            return Mono.empty();
+        });
+
     }
 
     /**

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpMessage;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -25,8 +24,6 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 public class AuthenticationEntryPoint implements ServerAuthenticationEntryPoint {
-
-    @Qualifier("customObjectMapper")
     private final ObjectMapper objectMapper;
 
     @Override

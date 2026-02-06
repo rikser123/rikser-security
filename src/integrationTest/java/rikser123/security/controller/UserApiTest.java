@@ -191,6 +191,32 @@ public class UserApiTest extends BaseConfig {
     }
 
     @Test
+    void editUserWithUpdatedLogin() {
+        var user = TestData.createUser();
+        var savedUser = userRepository.save(user);
+        var editDto = TestData.createUserEditRequestDto();
+        editDto.setEmail("uuu@rar.ru");
+        editDto.setPassword("1111111111a!");
+        editDto.setPasswordConfirmation("1111111111a!");
+        editDto.setLogin("my_new_login");
+        editDto.setId(savedUser.getId());
+        var token = generateAuthHeader(savedUser);
+
+        client.put().uri(uriBuilder -> uriBuilder
+        .path("/api/v1/user/edit")
+        .build())
+        .header("Authorization", token)
+        .bodyValue(IntegrationUtils.buildRequest(editDto))
+        .exchange()
+        .expectStatus().isOk()
+        .expectBody()
+        .consumeWith(System.out::println)
+        .jsonPath("$.result").isEqualTo(true)
+        .jsonPath("$.data.login").isEqualTo("my_new_login")
+        .jsonPath("$.data.token").isNotEmpty();
+    }
+
+    @Test
     void editUserWithSameLogin() {
         var user = TestData.createUser();
         var savedUser = userRepository.save(user);

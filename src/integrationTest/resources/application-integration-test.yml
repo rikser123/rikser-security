@@ -36,3 +36,7 @@ springdoc:
     enabled: false
   swagger-ui:
     enabled: false
+
+scheduler:
+  clear-black-list:
+    cron: "0 0 * * * *"
