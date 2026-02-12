@@ -10,14 +10,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "user_privilege")
@@ -26,31 +25,28 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserPrivilege {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id")
-    private UUID id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  @Column(name = "id")
+  private UUID id;
 
-    @Column(name = "privilege")
-    @Enumerated(EnumType.STRING)
-    private Privilege privilege;
+  @Column(name = "privilege")
+  @Enumerated(EnumType.STRING)
+  private Privilege privilege;
 
-    @ManyToOne()
-    @JoinColumn(name = "user_id")
-    private User user;
+  @ManyToOne()
+  @JoinColumn(name = "user_id")
+  private User user;
 
-    @Column(name = "created", updatable = false)
-    @CreationTimestamp
-    private LocalDateTime created;
+  @Column(name = "created", updatable = false)
+  @CreationTimestamp
+  private LocalDateTime created;
 
-    @Column(name = "updated", insertable = false)
-    private LocalDateTime updated;
+  @Column(name = "updated", insertable = false)
+  private LocalDateTime updated;
 
-    @Override
-    public String toString() {
-        return "userPrivilege " +
-                "id: " + id +
-                "privilege: " + privilege;
-    }
-
+  @Override
+  public String toString() {
+    return "userPrivilege " + "id: " + id + "privilege: " + privilege;
+  }
 }

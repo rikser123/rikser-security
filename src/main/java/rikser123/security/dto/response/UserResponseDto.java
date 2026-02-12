@@ -1,59 +1,55 @@
 package rikser123.security.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Set;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import rikser123.security.repository.entity.Privilege;
 import rikser123.security.repository.entity.UserStatus;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Set;
-import java.util.UUID;
-
-/**
- * Информация по пользователю
- *
- */
+/** Информация по пользователю */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Schema(description = "Возвращаемое дто пользователя")
 public class UserResponseDto {
-    @Schema(description = "Id пользователя", example = "2845f75e-bdeb-40da-8283-69622bba37b2")
-    private UUID id;
+  @Schema(description = "Id пользователя", example = "2845f75e-bdeb-40da-8283-69622bba37b2")
+  private UUID id;
 
-    @Schema(description = "Логин пользователя", example = "hook")
-    private String login;
+  @Schema(description = "Логин пользователя", example = "hook")
+  private String login;
 
-    @Schema(description = "Email пользователя", example = "rtrt@rar.ru")
-    private String email;
+  @Schema(description = "Email пользователя", example = "rtrt@rar.ru")
+  private String email;
 
-    @Schema(description = "Статус пользователя", example = "REGISTERED")
-    private UserStatus status;
+  @Schema(description = "Статус пользователя", example = "REGISTERED")
+  private UserStatus status;
 
-    @Schema(description = "Имя пользователя", example = "Иван")
-    private String firstName;
+  @Schema(description = "Имя пользователя", example = "Иван")
+  private String firstName;
 
-    @Schema(description = "Отчество пользователя", example = "Иванович")
-    private String middleName;
+  @Schema(description = "Отчество пользователя", example = "Иванович")
+  private String middleName;
 
-    @Schema(description = "Фамилия пользователя", example = "Иванов")
-    private String lastName;
+  @Schema(description = "Фамилия пользователя", example = "Иванов")
+  private String lastName;
 
-    @Schema(description = "Дата рождения пользователя", example = "1990-01-01")
-    private LocalDate birthDate;
+  @Schema(description = "Дата рождения пользователя", example = "1990-01-01")
+  private LocalDate birthDate;
 
-    @Schema(description = "Привилегии пользователя", example = "ADMIN, USER")
-    private Set<Privilege> privileges;
+  @Schema(description = "Привилегии пользователя", example = "ADMIN, USER")
+  private Set<Privilege> privileges;
 
-    @Schema(description = "Время создания")
-    private LocalDateTime created;
+  @Schema(description = "Время создания")
+  private LocalDateTime created;
 
-    @Schema(description = "Время обновления")
-    private LocalDateTime updated;
+  @Schema(description = "Время обновления")
+  private LocalDateTime updated;
 
-    @Schema(description = "Jwt token")
-    private String token;
+  @Schema(description = "Jwt token")
+  private String token;
 }

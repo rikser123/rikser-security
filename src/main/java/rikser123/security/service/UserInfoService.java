@@ -15,27 +15,28 @@ import reactor.core.scheduler.Schedulers;
 @RequiredArgsConstructor
 @Slf4j
 public class UserInfoService {
-    private final UserService userService;
+  private final UserService userService;
 
-    public Mono<UserDetails> getCurrentUser() {
-        return ReactiveSecurityContextHolder.getContext()
-                .map(SecurityContext::getAuthentication)
-                .map(data -> (UserDetails) data.getPrincipal());
-    }
+  public Mono<UserDetails> getCurrentUser() {
+    return ReactiveSecurityContextHolder.getContext()
+        .map(SecurityContext::getAuthentication)
+        .map(data -> (UserDetails) data.getPrincipal());
+  }
 
-    public ReactiveUserDetailsService userDetailsService() {
-        return this::getByUsername;
-    }
+  public ReactiveUserDetailsService userDetailsService() {
+    return this::getByUsername;
+  }
 
-    public Mono<UserDetails> getByUsername(String username) {
-       return Mono.fromCallable(() -> userService.findUserByLogin(username))
-            .subscribeOn(Schedulers.boundedElastic())
-            .flatMap(userOpt -> {
-                if (userOpt.isPresent()) {
-                    return Mono.just(userOpt.get());
-                }
+  public Mono<UserDetails> getByUsername(String username) {
+    return Mono.fromCallable(() -> userService.findUserByLogin(username))
+        .subscribeOn(Schedulers.boundedElastic())
+        .flatMap(
+            userOpt -> {
+              if (userOpt.isPresent()) {
+                return Mono.just(userOpt.get());
+              }
 
-                return Mono.error(new EntityNotFoundException("Пользователь не найден"));
+              return Mono.error(new EntityNotFoundException("Пользователь не найден"));
             });
-    }
+  }
 }

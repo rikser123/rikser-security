@@ -6,8 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication()
 public class RikserSecurityApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(RikserSecurityApplication.class, args);
-	}
-
+  public static void main(String[] args) {
+    SpringApplication.run(RikserSecurityApplication.class, args);
+  }
 }
