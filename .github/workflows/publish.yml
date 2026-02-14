@@ -26,7 +26,7 @@ jobs:
         run: ./gradlew integrationTest
 
       - name: Publish package
-        run: ./gradlew publish
+        run: ./gradlew publish -Pversion=${GITHUB_REF_NAME#v}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PAT_TOKEN: ${{ secrets.PAT }}

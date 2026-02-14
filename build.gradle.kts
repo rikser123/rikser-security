@@ -1,134 +1,139 @@
-import org.gradle.api.publish.PublishingExtension
-
 plugins {
-	java
-	id("org.springframework.boot") version "3.5.5"
-	id("io.spring.dependency-management") version "1.1.7"
-	`maven-publish`
+    java
+    id("org.springframework.boot") version "3.5.5"
+    id("io.spring.dependency-management") version "1.1.7"
+    `maven-publish`
 }
 
 
 configure<PublishingExtension> {
-	publications {
-		register<MavenPublication>("gpr") {
-			from(components["java"])
-		}
-	}
-	repositories {
-		maven {
-			name = "GitHubPackagesSecurity"
-			url = uri("https://maven.pkg.github.com/rikser123/rikser-security")
-			credentials {
-				username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_ACTOR")
-				password = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")
-			}
-		}
-	}
+    publications {
+        register<MavenPublication>("gpr") {
+            from(components["java"])
+        }
+    }
+    repositories {
+        maven {
+            name = "GitHubPackagesSecurity"
+            url = uri("https://maven.pkg.github.com/rikser123/rikser-security")
+            credentials {
+                username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_ACTOR")
+                password = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
 }
 
 group = "rikser123"
-version = "0.1.7"
 description = "Security"
 
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
-	}
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }
 
 configurations {
-	compileOnly {
-		extendsFrom(configurations.annotationProcessor.get())
-	}
+    compileOnly {
+        extendsFrom(configurations.annotationProcessor.get())
+    }
 }
 
 repositories {
-	mavenCentral()
-	maven {
-		name = "GitHubPackagesBundle"
-		url = uri("https://maven.pkg.github.com/rikser123/rikser-bundle")
-		credentials {
-			username =  project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_ACTOR")
-			password = project.findProperty("gpr.key") as String? ?: System.getenv("PAT_TOKEN")
-		}
-	}
+    mavenCentral()
+    gradlePluginPortal()
+    // Добавляем Alibaba mirror как запасной вариант
+    maven {
+        url = uri("https://maven.aliyun.com/repository/public")
+    }
+    maven {
+        url = uri("https://maven.aliyun.com/repository/gradle-plugin")
+    }
+    maven {
+        name = "GitHubPackagesBundle"
+        url = uri("https://maven.pkg.github.com/rikser123/rikser-bundle")
+        credentials {
+            username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_ACTOR")
+            password = project.findProperty("gpr.key") as String? ?: System.getenv("PAT_TOKEN")
+        }
+    }
 }
 
 sourceSets {
-	create("integrationTest") {
-		java {
-			srcDir("src/integrationTest/java")
-			compileClasspath += sourceSets.main.get().output
-			runtimeClasspath += sourceSets.main.get().output
-		}
-		resources {
-			srcDir("src/integrationTest/resources")
-		}
-	}
+    create("integrationTest") {
+        java {
+            srcDir("src/integrationTest/java")
+            compileClasspath += sourceSets.main.get().output
+            runtimeClasspath += sourceSets.main.get().output
+        }
+        resources {
+            srcDir("src/integrationTest/resources")
+        }
+    }
 }
 configurations {
-	// Конфигурация для integrationTest
-	val integrationTestImplementation by getting {
-		extendsFrom(configurations.testImplementation.get())
-		extendsFrom(configurations.implementation.get())
-	}
+    // Конфигурация для integrationTest
+    val integrationTestImplementation by getting {
+        extendsFrom(configurations.testImplementation.get())
+        extendsFrom(configurations.implementation.get())
+    }
 
-	val integrationTestRuntimeOnly by getting {
-		extendsFrom(configurations.testRuntimeOnly.get())
-		extendsFrom(configurations.runtimeOnly.get())
-	}
+    val integrationTestRuntimeOnly by getting {
+        extendsFrom(configurations.testRuntimeOnly.get())
+        extendsFrom(configurations.runtimeOnly.get())
+    }
 }
 
 
 val mockitoAgent = configurations.create("mockitoAgent")
 
 dependencies {
-	compileOnly("org.projectlombok:lombok")
-	developmentOnly("org.springframework.boot:spring-boot-devtools")
-	runtimeOnly("com.h2database:h2")
-	runtimeOnly("org.postgresql:postgresql")
-	annotationProcessor("org.projectlombok:lombok")
-	testImplementation("org.springframework.boot:spring-boot-starter-test")
-	testImplementation ("io.projectreactor:reactor-test")
-	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-	mockitoAgent("org.mockito:mockito-core") { isTransitive = false }
-	annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
-	implementation("rikser123:bundle:0.0.25")
-	testImplementation("org.springframework.boot:spring-boot-test-autoconfigure")
-	implementation("org.springframework.boot:spring-boot-starter-security")
-	testImplementation("org.mock-server:mockserver-netty:5.15.0")
-	testImplementation("org.mock-server:mockserver-client-java:5.15.0")
-	testImplementation("org.springframework.security:spring-security-test")
-	testImplementation("org.springframework.boot:spring-boot-starter-webflux")
-	testImplementation("io.projectreactor:reactor-test")
+    compileOnly("org.projectlombok:lombok")
+    developmentOnly("org.springframework.boot:spring-boot-devtools")
+    runtimeOnly("com.h2database:h2")
+    runtimeOnly("org.postgresql:postgresql")
+    annotationProcessor("org.projectlombok:lombok")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("io.projectreactor:reactor-test")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    mockitoAgent("org.mockito:mockito-core") { isTransitive = false }
+    annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
+    implementation("rikser123:bundle:0.0.25")
+    testImplementation("org.springframework.boot:spring-boot-test-autoconfigure")
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    testImplementation("org.mock-server:mockserver-netty:5.15.0")
+    testImplementation("org.mock-server:mockserver-client-java:5.15.0")
+    testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-webflux")
+    testImplementation("io.projectreactor:reactor-test")
 }
 
 
 tasks.withType<ProcessResources>().configureEach {
-	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 tasks.processResources {
-	duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
 tasks.withType<Test> {
-	useJUnitPlatform()
-	jvmArgs("-javaagent:${mockitoAgent.asPath}")
+    useJUnitPlatform()
+    jvmArgs("-javaagent:${mockitoAgent.asPath}")
 }
 
 tasks.register<Test>("integrationTest") {
-	description = "Runs integration tests."
-	group = "verification"
+    description = "Runs integration tests."
+    group = "verification"
 
-	testClassesDirs = sourceSets["integrationTest"].output.classesDirs
-	classpath = sourceSets["integrationTest"].runtimeClasspath
+    testClassesDirs = sourceSets["integrationTest"].output.classesDirs
+    classpath = sourceSets["integrationTest"].runtimeClasspath
 
-	useJUnitPlatform()
+    useJUnitPlatform()
 
-	testLogging {
-		events("passed", "skipped", "failed")
-	}
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
 }
 
 

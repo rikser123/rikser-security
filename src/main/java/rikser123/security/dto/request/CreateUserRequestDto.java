@@ -80,11 +80,9 @@ public class CreateUserRequestDto {
 
   @Schema(description = "Дата рождения пользователя", example = "1990-01-01")
   @NotNull(message = "Значение BirthDate не должно быть пустым")
-  @CheckSqlInjection
   private LocalDate birthDate;
 
   @NotEmpty(message = "Privileges не должно быть пустым")
   @Schema(description = "Список привилегий пользователя", example = "[EDIT, CREATE]")
-  @CheckSqlInjection
   private List<Privilege> privileges = new ArrayList<>();
 }

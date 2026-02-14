@@ -83,6 +83,5 @@ public class EditUserDto {
 
   @NotEmpty
   @Schema(description = "Список привилегий пользователя", example = "[EDIT, CREATE]")
-  @CheckSqlInjection
   private List<Privilege> privileges = new ArrayList<>();
 }
