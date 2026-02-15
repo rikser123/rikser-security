@@ -5,6 +5,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,6 +20,9 @@ import rikser123.security.repository.entity.UserPrivilege;
 public abstract class UserMapper {
   @Setter(onMethod = @__({@Autowired}))
   private PasswordEncoder passwordEncoder;
+
+  @Mapping(target = "authorities", ignore = true)
+  public abstract rikser123.bundle.dto.User mapToSecurityUser(User user);
 
   public abstract User mapUser(CreateUserRequestDto dto);
 

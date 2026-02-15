@@ -42,3 +42,9 @@ scheduler:
   clear-black-list:
     cron: "0 0 * * * *"
 
+security:
+  enabled: true
+  service:
+    enabled: false
+    url: http://localhost:8081
+

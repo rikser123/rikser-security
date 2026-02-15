@@ -31,6 +31,7 @@ import rikser123.security.mapper.UserMapper;
 import rikser123.security.mapper.UserMapperImpl;
 import rikser123.security.repository.entity.UserStatus;
 import rikser123.security.service.impl.SecurityServiceImpl;
+import rikser123.security.service.impl.UserInfoService;
 
 /** Тестирование класса {@link SecurityService} */
 @ExtendWith(SpringExtension.class)

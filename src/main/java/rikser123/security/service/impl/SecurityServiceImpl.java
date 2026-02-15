@@ -32,11 +32,9 @@ import rikser123.security.dto.response.UserEmailResponse;
 import rikser123.security.dto.response.UserResponseDto;
 import rikser123.security.mapper.UserMapper;
 import rikser123.security.repository.entity.Privilege;
-import rikser123.security.repository.entity.User;
 import rikser123.security.repository.entity.UserStatus;
 import rikser123.security.service.BlackListService;
 import rikser123.security.service.SecurityService;
-import rikser123.security.service.UserInfoService;
 import rikser123.security.service.UserService;
 
 @Service
@@ -276,12 +274,12 @@ public class SecurityServiceImpl implements SecurityService {
    *
    * @param userId Id пользователя
    */
-  private Mono<User> checkAccess(UUID userId, Privilege privilege) {
+  private Mono<rikser123.bundle.dto.User> checkAccess(UUID userId, Privilege privilege) {
     return userInfoService
         .getCurrentUser()
         .flatMap(
             userDetails -> {
-              User user = (User) userDetails;
+              var user = (rikser123.bundle.dto.User) userDetails;
 
               if (!userId.equals(user.getId()) && !user.getPrivileges().contains(privilege)) {
                 return Mono.error(new AccessDeniedException("Доступ запрещен"));

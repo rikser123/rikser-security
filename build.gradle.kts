@@ -98,9 +98,8 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     mockitoAgent("org.mockito:mockito-core") { isTransitive = false }
     annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
-    implementation("rikser123:bundle:0.0.25")
+    implementation("rikser123:bundle:0.0.35")
     testImplementation("org.springframework.boot:spring-boot-test-autoconfigure")
-    implementation("org.springframework.boot:spring-boot-starter-security")
     testImplementation("org.mock-server:mockserver-netty:5.15.0")
     testImplementation("org.mock-server:mockserver-client-java:5.15.0")
     testImplementation("org.springframework.security:spring-security-test")
