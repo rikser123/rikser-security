@@ -1,5 +1,6 @@
 package rikser123.security.service.impl;
 
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,15 +14,17 @@ import reactor.core.scheduler.Schedulers;
 import rikser123.bundle.service.UserDetailService;
 import rikser123.security.component.Jwt;
 import rikser123.security.mapper.UserMapper;
+import rikser123.security.service.BlackListService;
 import rikser123.security.service.UserService;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class UserInfoService implements UserDetailService {
+public class UserDetailServiceImpl implements UserDetailService {
   private final UserService userService;
   private final UserMapper userMapper;
   private final Jwt jwt;
+  private final BlackListService blackListService;
 
   @Override
   public Mono<UserDetails> getCurrentUser() {
@@ -37,17 +40,19 @@ public class UserInfoService implements UserDetailService {
 
   @Override
   public Mono<UserDetails> getByUsername(String token) {
-    return Mono.fromCallable(() -> jwt.extractUserName(token))
-        .onErrorResume(ex -> Mono.error(ex))
+    return Mono.fromCallable(() -> blackListService.findByToken(token))
+        .flatMap(
+            blackOpt -> {
+              if (blackOpt.isPresent()) {
+                return Mono.error(new EntityExistsException("Токен в блеклисте"));
+              }
+              return Mono.fromCallable(() -> jwt.extractUserName(token));
+            })
         .map(userService::findUserByLogin)
         .subscribeOn(Schedulers.boundedElastic())
-        .flatMap(
-            userOpt -> {
-              if (userOpt.isPresent()) {
-                return Mono.just(userMapper.mapToSecurityUser(userOpt.get()));
-              }
-
-              return Mono.error(new EntityNotFoundException("Пользователь не найден"));
-            });
+        .flatMap(userOpt -> userOpt.map(Mono::just).orElse(Mono.empty()))
+        .switchIfEmpty(
+            Mono.defer(() -> Mono.error(new EntityNotFoundException("Пользователь не найден"))))
+        .map(userMapper::mapToSecurityUser);
   }
 }

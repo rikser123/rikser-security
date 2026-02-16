@@ -45,7 +45,7 @@ public class SecurityServiceImpl implements SecurityService {
   private final UserMapper userMapper;
   private final Jwt jwt;
   private final ReactiveAuthenticationManager authenticationManager;
-  private final UserInfoService userInfoService;
+  private final UserDetailServiceImpl userInfoService;
   private final UserService userService;
   private final PasswordEncoder passwordEncoder;
   private final BlackListService blackListService;

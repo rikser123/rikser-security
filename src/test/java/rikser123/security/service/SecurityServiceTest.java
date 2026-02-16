@@ -31,7 +31,7 @@ import rikser123.security.mapper.UserMapper;
 import rikser123.security.mapper.UserMapperImpl;
 import rikser123.security.repository.entity.UserStatus;
 import rikser123.security.service.impl.SecurityServiceImpl;
-import rikser123.security.service.impl.UserInfoService;
+import rikser123.security.service.impl.UserDetailServiceImpl;
 
 /** Тестирование класса {@link SecurityService} */
 @ExtendWith(SpringExtension.class)
@@ -43,7 +43,7 @@ public class SecurityServiceTest {
 
   @Mock private ReactiveAuthenticationManager authenticationManager;
 
-  @Mock private UserInfoService userInfoService;
+  @Mock private UserDetailServiceImpl userDetailService;
 
   @Mock private UserService userService;
 
@@ -61,7 +61,7 @@ public class SecurityServiceTest {
             userMapper,
             jwt,
             authenticationManager,
-            userInfoService,
+            userDetailService,
             userService,
             passwordEncoder,
             blackListService);
@@ -138,7 +138,7 @@ public class SecurityServiceTest {
     when(userService.findUserByLogin(user.getLogin())).thenReturn(Optional.empty());
     when(userService.findUserByEmail(user.getEmail())).thenReturn(Optional.empty());
     when(userService.save(any())).thenReturn(user);
-    when(userInfoService.getCurrentUser()).thenReturn(Mono.just(user));
+    when(userDetailService.getCurrentUser()).thenReturn(Mono.just(user));
     when(authenticationManager.authenticate((any())))
         .thenReturn(Mono.just(new AuthenticationMock()));
 
@@ -159,7 +159,7 @@ public class SecurityServiceTest {
     editDto.setId(UUID.randomUUID());
     user.setUserPrivileges(Collections.emptySet());
 
-    when(userInfoService.getCurrentUser()).thenReturn(Mono.just(user));
+    when(userDetailService.getCurrentUser()).thenReturn(Mono.just(user));
 
     StepVerifier.create(securityService.editUser(editDto, "Bearer 12345"))
         .verifyError(AccessDeniedException.class);
@@ -189,7 +189,7 @@ public class SecurityServiceTest {
     var user = TestData.createUser();
     dto.setId(user.getId());
 
-    when(userInfoService.getCurrentUser()).thenReturn(Mono.just(user));
+    when(userDetailService.getCurrentUser()).thenReturn(Mono.just(user));
     when(userService.findById(user.getId())).thenReturn(user);
     when(userService.changeStatus(user, UserStatus.EMAIL_ACTIVATED)).thenReturn(user);
 
@@ -206,7 +206,7 @@ public class SecurityServiceTest {
     var user = TestData.createUser();
 
     when(userService.findById(user.getId())).thenReturn(user);
-    when(userInfoService.getCurrentUser()).thenReturn(Mono.just(user));
+    when(userDetailService.getCurrentUser()).thenReturn(Mono.just(user));
 
     StepVerifier.create(securityService.getUser(user.getId()))
         .assertNext(
