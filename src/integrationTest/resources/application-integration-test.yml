@@ -4,28 +4,9 @@ spring:
     web-application-type: reactive
   application:
     name: rikser-security
-  datasource:
-    driver-class-name:  org.h2.Driver
-    url: "jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1"
-    username: sa
-    password: ""
-    hikari:
-      schema: PUBLIC
-      maximum-pool-size: 5
-      connection-timeout: 5000
-  jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
   liquibase:
     change-log: classpath:/db/changelog/changelog-master.xml
-    default-schema: PUBLIC
-    liquibase-schema: PUBLIC
-    drop-first: false
-  data:
-    rest:
-      detection-strategy: annotated
-
-server:
-  port: 8081
+    drop-first: true
 
 jwt:
   expirationTime: 86400000
@@ -36,7 +17,3 @@ springdoc:
     enabled: false
   swagger-ui:
     enabled: false
-
-scheduler:
-  clear-black-list:
-    cron: "0 0 * * * *"
