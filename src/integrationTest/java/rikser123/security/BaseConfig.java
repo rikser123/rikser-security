@@ -1,7 +1,5 @@
 package rikser123.security;
 
-import static org.mockserver.integration.ClientAndServer.startClientAndServer;
-
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.mockserver.integration.ClientAndServer;
@@ -12,6 +10,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import static org.mockserver.integration.ClientAndServer.startClientAndServer;
+
 @ActiveProfiles("integration-test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient
@@ -19,7 +19,8 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 public abstract class BaseConfig {
   protected static ClientAndServer mockServer;
 
-  @Autowired protected WebTestClient client;
+  @Autowired
+  protected WebTestClient client;
 
   @BeforeAll
   static void initMock() {
