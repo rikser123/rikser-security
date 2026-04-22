@@ -45,3 +45,16 @@ security:
     enabled: false
     url: http://localhost:8081
 
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+      status:
+        http-mapping:
+          down: 503
+
