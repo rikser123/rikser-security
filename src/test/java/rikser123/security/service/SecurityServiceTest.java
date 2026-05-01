@@ -1,15 +1,7 @@
 package rikser123.security.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Optional;
-import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,25 +23,41 @@ import rikser123.security.mapper.UserMapper;
 import rikser123.security.mapper.UserMapperImpl;
 import rikser123.security.repository.entity.UserStatus;
 import rikser123.security.service.impl.SecurityServiceImpl;
-import rikser123.security.service.impl.UserDetailServiceImpl;
 
-/** Тестирование класса {@link SecurityService} */
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+/**
+ * Тестирование класса {@link SecurityService}
+ */
 @ExtendWith(SpringExtension.class)
 public class SecurityServiceTest {
   private SecurityService securityService;
   private UserMapper userMapper;
 
-  @Mock private Jwt jwt;
+  @Mock
+  private Jwt jwt;
 
-  @Mock private ReactiveAuthenticationManager authenticationManager;
+  @Mock
+  private ReactiveAuthenticationManager authenticationManager;
 
-  @Mock private UserDetailServiceImpl userDetailService;
+  @Mock
+  private UserDetailSecurityService userDetailService;
 
-  @Mock private UserService userService;
+  @Mock
+  private UserService userService;
 
-  @Mock private PasswordEncoder passwordEncoder;
+  @Mock
+  private PasswordEncoder passwordEncoder;
 
-  @Mock private BlackListService blackListService;
+  @Mock
+  private BlackListService blackListService;
 
   @BeforeEach
   void init() {
@@ -57,14 +65,14 @@ public class SecurityServiceTest {
     userMapper.setPasswordEncoder(passwordEncoder);
 
     securityService =
-        new SecurityServiceImpl(
-            userMapper,
-            jwt,
-            authenticationManager,
-            userDetailService,
-            userService,
-            passwordEncoder,
-            blackListService);
+      new SecurityServiceImpl(
+        userMapper,
+        jwt,
+        authenticationManager,
+        userDetailService,
+        userService,
+        passwordEncoder,
+        blackListService);
   }
 
   @Test
@@ -76,14 +84,14 @@ public class SecurityServiceTest {
     when(userService.findUserByEmail(userDto.getEmail())).thenReturn(Optional.empty());
     when(userService.save(any())).thenReturn(user);
     when(authenticationManager.authenticate((any())))
-        .thenReturn(Mono.just(new AuthenticationMock()));
+      .thenReturn(Mono.just(new AuthenticationMock()));
 
     StepVerifier.create(securityService.register(userDto))
-        .assertNext(
-            result -> {
-              assertThat(result.getData().getId()).isEqualTo(user.getId());
-            })
-        .verifyComplete();
+      .assertNext(
+        result -> {
+          assertThat(result.getData().getId()).isEqualTo(user.getId());
+        })
+      .verifyComplete();
   }
 
   @Test
@@ -105,15 +113,15 @@ public class SecurityServiceTest {
 
     when(userService.findUserByLogin(loginDto.getLogin())).thenReturn(Optional.of(user));
     when(authenticationManager.authenticate((any())))
-        .thenReturn(Mono.just(new AuthenticationMock()));
+      .thenReturn(Mono.just(new AuthenticationMock()));
     when(passwordEncoder.matches(any(), any())).thenReturn(true);
 
     StepVerifier.create(securityService.login(loginDto))
-        .assertNext(
-            result -> {
-              assertThat(result.getData().getUser().getId()).isEqualTo(user.getId());
-            })
-        .verifyComplete();
+      .assertNext(
+        result -> {
+          assertThat(result.getData().getUser().getId()).isEqualTo(user.getId());
+        })
+      .verifyComplete();
   }
 
   @Test
@@ -140,16 +148,16 @@ public class SecurityServiceTest {
     when(userService.save(any())).thenReturn(user);
     when(userDetailService.getCurrentUser()).thenReturn(Mono.just(user));
     when(authenticationManager.authenticate((any())))
-        .thenReturn(Mono.just(new AuthenticationMock()));
+      .thenReturn(Mono.just(new AuthenticationMock()));
 
     StepVerifier.create(securityService.editUser(editDto, "Bearer 12345"))
-        .assertNext(
-            result -> {
-              assertThat(result.getData().getLogin()).isEqualTo(editDto.getLogin());
-              assertThat(result.getData().getEmail()).isEqualTo(editDto.getEmail());
-              assertThat(result.getData().getFirstName()).isEqualTo(editDto.getFirstName());
-            })
-        .verifyComplete();
+      .assertNext(
+        result -> {
+          assertThat(result.getData().getLogin()).isEqualTo(editDto.getLogin());
+          assertThat(result.getData().getEmail()).isEqualTo(editDto.getEmail());
+          assertThat(result.getData().getFirstName()).isEqualTo(editDto.getFirstName());
+        })
+      .verifyComplete();
   }
 
   @Test
@@ -162,7 +170,7 @@ public class SecurityServiceTest {
     when(userDetailService.getCurrentUser()).thenReturn(Mono.just(user));
 
     StepVerifier.create(securityService.editUser(editDto, "Bearer 12345"))
-        .verifyError(AccessDeniedException.class);
+      .verifyError(AccessDeniedException.class);
   }
 
   @Test
@@ -176,11 +184,11 @@ public class SecurityServiceTest {
     when(userService.changeStatus(user, UserStatus.DEACTIVATED)).thenReturn(user);
 
     StepVerifier.create(securityService.deactivate(dto))
-        .assertNext(
-            result -> {
-              assertThat(result.getData().getId()).isEqualTo(user.getId());
-            })
-        .verifyComplete();
+      .assertNext(
+        result -> {
+          assertThat(result.getData().getId()).isEqualTo(user.getId());
+        })
+      .verifyComplete();
   }
 
   @Test
@@ -194,11 +202,11 @@ public class SecurityServiceTest {
     when(userService.changeStatus(user, UserStatus.EMAIL_ACTIVATED)).thenReturn(user);
 
     StepVerifier.create(securityService.activateEmail(dto))
-        .assertNext(
-            result -> {
-              assertThat(result.getData().getId()).isEqualTo(user.getId());
-            })
-        .verifyComplete();
+      .assertNext(
+        result -> {
+          assertThat(result.getData().getId()).isEqualTo(user.getId());
+        })
+      .verifyComplete();
   }
 
   @Test
@@ -209,11 +217,11 @@ public class SecurityServiceTest {
     when(userDetailService.getCurrentUser()).thenReturn(Mono.just(user));
 
     StepVerifier.create(securityService.getUser(user.getId()))
-        .assertNext(
-            result -> {
-              assertThat(result.getData().getId()).isEqualTo(user.getId());
-            })
-        .verifyComplete();
+      .assertNext(
+        result -> {
+          assertThat(result.getData().getId()).isEqualTo(user.getId());
+        })
+      .verifyComplete();
   }
 
   private static class AuthenticationMock implements Authentication {
@@ -244,7 +252,8 @@ public class SecurityServiceTest {
     }
 
     @Override
-    public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException {}
+    public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException {
+    }
 
     @Override
     public String getName() {

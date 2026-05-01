@@ -1,17 +1,19 @@
 package rikser123.security.service.impl;
 
 import jakarta.persistence.EntityNotFoundException;
-import java.util.Optional;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import rikser123.bundle.exception.StatusChangeException;
 import rikser123.bundle.service.StatusMatrix;
 import rikser123.security.repository.UserRepository;
 import rikser123.security.repository.entity.User;
 import rikser123.security.repository.entity.UserStatus;
 import rikser123.security.service.UserService;
+
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +33,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  @Transactional
   public User save(User user) {
     return userRepository.save(user);
   }
@@ -38,9 +41,9 @@ public class UserServiceImpl implements UserService {
   @Override
   public User findById(UUID id) {
     return userRepository
-        .findById(id)
-        .orElseThrow(
-            () -> new EntityNotFoundException(String.format("Пользователь с id %s не найден", id)));
+      .findById(id)
+      .orElseThrow(
+        () -> new EntityNotFoundException(String.format("Пользователь с id %s не найден", id)));
   }
 
   @Override
@@ -54,14 +57,15 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  @Transactional
   public User changeStatus(User user, UserStatus status) {
     if (user.getStatus().equals(status)
-        || !userStatusMatrix.isAvailable(user.getStatus(), status)) {
+      || !userStatusMatrix.isAvailable(user.getStatus(), status)) {
       log.warn(
-          "ERROR: while checkStatusMovement for user: {} from: {} to: {}",
-          user.getId(),
-          user.getStatus(),
-          status);
+        "ERROR: while checkStatusMovement for user: {} from: {} to: {}",
+        user.getId(),
+        user.getStatus(),
+        status);
       throw new StatusChangeException();
     }
     user.setStatus(status);

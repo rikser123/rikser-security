@@ -1,14 +1,16 @@
 package rikser123.security.service.impl;
 
-import java.util.Optional;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import rikser123.security.repository.BlackListRepository;
 import rikser123.security.repository.entity.BlackListToken;
 import rikser123.security.service.BlackListService;
+
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +26,7 @@ public class BlackListServiceImpl implements BlackListService {
   }
 
   @Override
+  @Transactional
   public BlackListToken addToken(String token, UUID userId) {
     var blackListToken = new BlackListToken();
     blackListToken.setToken(token);

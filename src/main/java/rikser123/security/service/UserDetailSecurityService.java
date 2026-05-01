@@ -1,4 +1,4 @@
-package rikser123.security.service.impl;
+package rikser123.security.service;
 
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
@@ -14,13 +14,11 @@ import reactor.core.scheduler.Schedulers;
 import rikser123.bundle.service.UserDetailService;
 import rikser123.security.component.Jwt;
 import rikser123.security.mapper.UserMapper;
-import rikser123.security.service.BlackListService;
-import rikser123.security.service.UserService;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class UserDetailServiceImpl implements UserDetailService {
+public class UserDetailSecurityService implements UserDetailService {
   private final UserService userService;
   private final UserMapper userMapper;
   private final Jwt jwt;
@@ -29,8 +27,8 @@ public class UserDetailServiceImpl implements UserDetailService {
   @Override
   public Mono<UserDetails> getCurrentUser() {
     return ReactiveSecurityContextHolder.getContext()
-        .map(SecurityContext::getAuthentication)
-        .map(data -> (UserDetails) data.getPrincipal());
+      .map(SecurityContext::getAuthentication)
+      .map(data -> (UserDetails) data.getPrincipal());
   }
 
   @Override
@@ -41,18 +39,18 @@ public class UserDetailServiceImpl implements UserDetailService {
   @Override
   public Mono<UserDetails> getByUsername(String token) {
     return Mono.fromCallable(() -> blackListService.findByToken(token))
-        .flatMap(
-            blackOpt -> {
-              if (blackOpt.isPresent()) {
-                return Mono.error(new EntityExistsException("Токен в блеклисте"));
-              }
-              return Mono.fromCallable(() -> jwt.extractUserName(token));
-            })
-        .map(userService::findUserByLogin)
-        .subscribeOn(Schedulers.boundedElastic())
-        .flatMap(userOpt -> userOpt.map(Mono::just).orElse(Mono.empty()))
-        .switchIfEmpty(
-            Mono.defer(() -> Mono.error(new EntityNotFoundException("Пользователь не найден"))))
-        .map(userMapper::mapToSecurityUser);
+      .flatMap(
+        blackOpt -> {
+          if (blackOpt.isPresent()) {
+            return Mono.error(new EntityExistsException("Токен в блеклисте"));
+          }
+          return Mono.fromCallable(() -> jwt.extractUserName(token));
+        })
+      .map(userService::findUserByLogin)
+      .subscribeOn(Schedulers.boundedElastic())
+      .flatMap(userOpt -> userOpt.map(Mono::just).orElse(Mono.empty()))
+      .switchIfEmpty(
+        Mono.defer(() -> Mono.error(new EntityNotFoundException("Пользователь не найден"))))
+      .map(userMapper::mapToSecurityUser);
   }
 }
