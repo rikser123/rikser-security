@@ -1,5 +1,8 @@
 package rikser123.security.service.impl;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
@@ -47,10 +50,11 @@ public class SecurityServiceImpl implements SecurityService {
   private final UserMapper userMapper;
   private final Jwt jwt;
   private final ReactiveAuthenticationManager authenticationManager;
-  private final UserDetailSecurityService userInfoService;
+  private final UserDetailSecurityService userDetailSecurityService;
   private final UserService userService;
   private final PasswordEncoder passwordEncoder;
   private final BlackListService blackListService;
+  private final ObjectMapper objectMapper;
 
   @Override
   public Mono<RikserResponseItem<CreateUserResponseDto>> register(CreateUserRequestDto requestDto) {
@@ -197,7 +201,7 @@ public class SecurityServiceImpl implements SecurityService {
           responseDto.setToken(token);
 
           if (oldToken.startsWith(BEARER_PREFIX)) {
-            var oldTokenContent = oldToken.substring(BEARER_PREFIX.length());
+            var oldTokenContent = extractToken(oldToken);
             blackListService.addToken(oldTokenContent, user.getId());
           }
 
@@ -252,6 +256,19 @@ public class SecurityServiceImpl implements SecurityService {
         });
   }
 
+  @Override
+  public Mono<RikserResponseItem<JsonNode>> getUserByToken(String authToken) {
+    return Mono.fromCallable(() -> extractToken(authToken))
+      .flatMap(userDetailSecurityService::getByUsername)
+      .map(details -> {
+        var user = (rikser123.bundle.dto.User) details;
+        ObjectNode node = objectMapper.valueToTree(user);
+        node.remove("authorities");
+        return RikserResponseUtils.createResponse(node);
+      });
+  }
+
+
   /**
    * Установка аутентикации в контекст
    *
@@ -277,7 +294,7 @@ public class SecurityServiceImpl implements SecurityService {
    * @param userId Id пользователя
    */
   private Mono<rikser123.bundle.dto.User> checkAccess(UUID userId, Privilege privilege) {
-    return userInfoService
+    return userDetailSecurityService
       .getCurrentUser()
       .flatMap(
         userDetails -> {
@@ -289,5 +306,14 @@ public class SecurityServiceImpl implements SecurityService {
 
           return Mono.just(user);
         });
+  }
+
+  /**
+   * Извлечение токена из заголовка
+   *
+   * @param authToken Заголовок с токеном
+   */
+  private String extractToken(String authToken) {
+    return authToken.substring(BEARER_PREFIX.length());
   }
 }

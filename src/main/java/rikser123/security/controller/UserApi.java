@@ -1,11 +1,11 @@
 package rikser123.security.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,54 +31,61 @@ import rikser123.security.dto.response.UserDeactivateResponse;
 import rikser123.security.dto.response.UserEmailResponse;
 import rikser123.security.dto.response.UserResponseDto;
 
+import java.util.UUID;
+
 @Tag(name = "API для взаимодействия с пользователми")
 @ApiResponses(
-    value = {
-      @ApiResponse(responseCode = "400", description = "Bad request"),
-      @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
+  value = {
+    @ApiResponse(responseCode = "400", description = "Bad request"),
+    @ApiResponse(responseCode = "500", description = "Internal server error")
+  })
 @RequestMapping("/api/v1/user")
 public interface UserApi {
 
   @PostMapping("/register")
   @Operation(description = "Регистрация пользователя")
   Mono<RikserResponseItem<CreateUserResponseDto>> register(
-      @RequestBody @Parameter(description = "Параметры для регистрации", required = true)
-          RikserRequestItem<CreateUserRequestDto> registerDto);
+    @RequestBody @Parameter(description = "Параметры для регистрации", required = true)
+    RikserRequestItem<CreateUserRequestDto> registerDto);
 
   @PostMapping("/login")
   @Operation(description = "Авторизация пользователя")
   @ResponseStatus(HttpStatus.OK)
   Mono<RikserResponseItem<LoginResponseDto>> login(
-      @RequestBody @Parameter(description = "Параметры для авторизации", required = true)
-          RikserRequestItem<LoginRequestDto> loginDto);
+    @RequestBody @Parameter(description = "Параметры для авторизации", required = true)
+    RikserRequestItem<LoginRequestDto> loginDto);
 
   @PutMapping("/edit")
   @Operation(description = "Редактирование пользователя")
   @ResponseStatus(HttpStatus.OK)
   Mono<RikserResponseItem<UserResponseDto>> edit(
-      @RequestBody
-          @Parameter(description = "Параметры для редактирования пользователя", required = true)
-          RikserRequestItem<EditUserDto> editDto,
-      @RequestHeader("Authorization") String authToken);
+    @RequestBody
+    @Parameter(description = "Параметры для редактирования пользователя", required = true)
+    RikserRequestItem<EditUserDto> editDto,
+    @RequestHeader("Authorization") String authToken);
 
   @PatchMapping("/deactivate")
   @Operation(description = "Деактивация пользователя")
   @PreAuthorize("hasAuthority('USER_DELETE')")
   @ResponseStatus(HttpStatus.OK)
   Mono<RikserResponseItem<UserDeactivateResponse>> deactivate(
-      @RequestBody @Parameter(description = "Параметры для деактивации пользователя")
-          RikserRequestItem<UserDeactivateRequestDto> deactivateDto);
+    @RequestBody @Parameter(description = "Параметры для деактивации пользователя")
+    RikserRequestItem<UserDeactivateRequestDto> deactivateDto);
 
   @PatchMapping("/activate-email")
   @Operation(description = "Подтверждение емейла пользователя")
   @ResponseStatus(HttpStatus.OK)
   Mono<RikserResponseItem<UserEmailResponse>> activateEmail(
-      @RequestBody @Parameter(description = "Параметры для для подтверждения емейла пользователя")
-          RikserRequestItem<UserEmailRequestDto> deactivateDto);
+    @RequestBody @Parameter(description = "Параметры для для подтверждения емейла пользователя")
+    RikserRequestItem<UserEmailRequestDto> deactivateDto);
 
   @GetMapping("/get/{id}")
   @Operation(description = "Получпние пользователя по айди")
   @ResponseStatus(HttpStatus.OK)
   Mono<RikserResponseItem<UserResponseDto>> getUser(@PathVariable UUID id);
+
+  @GetMapping("/token")
+  @Operation(description = "Получение пользователя по токену")
+  @ResponseStatus(HttpStatus.OK)
+  Mono<RikserResponseItem<JsonNode>> getByToken(@RequestHeader("Authorization") String authToken);
 }

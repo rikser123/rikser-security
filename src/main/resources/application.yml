@@ -1,4 +1,7 @@
 spring:
+  webflux:
+    server:
+      log-request-details: true
   main:
     allow-bean-definition-overriding: true
     web-application-type: reactive
@@ -21,6 +24,9 @@ spring:
     default-schema: rikser-security
     liquibase-schema: rikser-security
     drop-first: false
+  cloud:
+    compatibility-verifier:
+      enabled: false
 
 server:
   port: 8081
@@ -57,4 +63,3 @@ management:
       status:
         http-mapping:
           down: 503
-

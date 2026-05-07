@@ -1,6 +1,6 @@
 package rikser123.security.service;
 
-import java.util.UUID;
+import com.fasterxml.jackson.databind.JsonNode;
 import reactor.core.publisher.Mono;
 import rikser123.bundle.dto.response.RikserResponseItem;
 import rikser123.security.dto.request.CreateUserRequestDto;
@@ -14,7 +14,11 @@ import rikser123.security.dto.response.UserDeactivateResponse;
 import rikser123.security.dto.response.UserEmailResponse;
 import rikser123.security.dto.response.UserResponseDto;
 
-/** Интерфейс для работы с безопасностью и пользователями */
+import java.util.UUID;
+
+/**
+ * Интерфейс для работы с безопасностью и пользователями
+ */
 public interface SecurityService {
   /**
    * Регистрация пользователя
@@ -35,7 +39,7 @@ public interface SecurityService {
   /**
    * Редактирование пользователя
    *
-   * @param userDto {@link EditUserDto}
+   * @param userDto  {@link EditUserDto}
    * @param oldToken Токен запроса
    * @return Ответ на редаиткрование пользователя
    */
@@ -64,4 +68,13 @@ public interface SecurityService {
    * @return Ответ на получение пользователя
    */
   Mono<RikserResponseItem<UserResponseDto>> getUser(UUID id);
+
+
+  /**
+   * Получение пользователя по токену
+   *
+   * @param authToken Токен авторизации
+   * @return Ответ на получение пользователя
+   */
+  Mono<RikserResponseItem<JsonNode>> getUserByToken(String authToken);
 }
