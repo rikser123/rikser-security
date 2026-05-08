@@ -43,13 +43,6 @@ configurations {
 repositories {
     mavenCentral()
     gradlePluginPortal()
-    // Добавляем Alibaba mirror как запасной вариант
-    maven {
-        url = uri("https://maven.aliyun.com/repository/public")
-    }
-    maven {
-        url = uri("https://maven.aliyun.com/repository/gradle-plugin")
-    }
     maven {
         name = "GitHubPackagesBundle"
         url = uri("https://maven.pkg.github.com/rikser123/rikser-bundle")
@@ -98,7 +91,7 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     mockitoAgent("org.mockito:mockito-core") { isTransitive = false }
     annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
-    implementation("rikser123:bundle:0.0.56")
+    implementation("rikser123:bundle:0.0.57")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     testImplementation("org.springframework.boot:spring-boot-test-autoconfigure")
     testImplementation("org.mock-server:mockserver-netty:5.15.0")
