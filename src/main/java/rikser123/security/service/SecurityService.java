@@ -1,7 +1,6 @@
 package rikser123.security.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import reactor.core.publisher.Mono;
 import rikser123.bundle.dto.response.RikserResponseItem;
 import rikser123.security.dto.request.CreateUserRequestDto;
 import rikser123.security.dto.request.EditUserDto;
@@ -26,7 +25,7 @@ public interface SecurityService {
    * @param requestDto {@link CreateUserRequestDto}
    * @return Ответ с зарегистрированным пользователем
    */
-  Mono<RikserResponseItem<CreateUserResponseDto>> register(CreateUserRequestDto requestDto);
+  RikserResponseItem<CreateUserResponseDto> register(CreateUserRequestDto requestDto);
 
   /**
    * Логиг пользователя
@@ -34,7 +33,7 @@ public interface SecurityService {
    * @param requestDto {@link LoginRequestDto}
    * @return Токен и пользователь
    */
-  Mono<RikserResponseItem<LoginResponseDto>> login(LoginRequestDto requestDto);
+  RikserResponseItem<LoginResponseDto> login(LoginRequestDto requestDto);
 
   /**
    * Редактирование пользователя
@@ -43,7 +42,7 @@ public interface SecurityService {
    * @param oldToken Токен запроса
    * @return Ответ на редаиткрование пользователя
    */
-  Mono<RikserResponseItem<UserResponseDto>> editUser(EditUserDto userDto, String oldToken);
+  RikserResponseItem<UserResponseDto> editUser(EditUserDto userDto, String oldToken);
 
   /**
    * Деактивация пользователя
@@ -51,7 +50,7 @@ public interface SecurityService {
    * @param requestDto {@link UserDeactivateRequestDto}
    * @return Ответ на деактивацию пользователя
    */
-  Mono<RikserResponseItem<UserDeactivateResponse>> deactivate(UserDeactivateRequestDto requestDto);
+  RikserResponseItem<UserDeactivateResponse> deactivate(UserDeactivateRequestDto requestDto);
 
   /**
    * Подтвердение емейла пользователя
@@ -59,7 +58,7 @@ public interface SecurityService {
    * @param requestDto {@link UserEmailRequestDto}
    * @return Ответ на подтверждение емейла
    */
-  Mono<RikserResponseItem<UserEmailResponse>> activateEmail(UserEmailRequestDto requestDto);
+  RikserResponseItem<UserEmailResponse> activateEmail(UserEmailRequestDto requestDto);
 
   /**
    * Получение пользователя по айди
@@ -67,7 +66,7 @@ public interface SecurityService {
    * @param id Id пользователя
    * @return Ответ на получение пользователя
    */
-  Mono<RikserResponseItem<UserResponseDto>> getUser(UUID id);
+  RikserResponseItem<UserResponseDto> getUser(UUID id);
 
 
   /**
@@ -76,5 +75,5 @@ public interface SecurityService {
    * @param authToken Токен авторизации
    * @return Ответ на получение пользователя
    */
-  Mono<RikserResponseItem<JsonNode>> getUserByToken(String authToken);
+  RikserResponseItem<JsonNode> getUserByToken(String authToken);
 }

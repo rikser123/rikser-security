@@ -1,5 +1,6 @@
 package rikser123.security.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -7,13 +8,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authentication.ReactiveAuthenticationManager;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
 import rikser123.security.TestData;
 import rikser123.security.component.Jwt;
 import rikser123.security.dto.request.LoginRequestDto;
@@ -30,11 +30,12 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 /**
- * Тестирование класса {@link SecurityService}
+ * Тестирование класса {@link SecurityService} (синхронная версия)
  */
 @ExtendWith(SpringExtension.class)
 public class SecurityServiceTest {
@@ -45,7 +46,7 @@ public class SecurityServiceTest {
   private Jwt jwt;
 
   @Mock
-  private ReactiveAuthenticationManager authenticationManager;
+  private AuthenticationManager authenticationManager;
 
   @Mock
   private UserDetailSecurityService userDetailService;
@@ -64,15 +65,18 @@ public class SecurityServiceTest {
     userMapper = new UserMapperImpl();
     userMapper.setPasswordEncoder(passwordEncoder);
 
-    securityService =
-      new SecurityServiceImpl(
-        userMapper,
-        jwt,
-        authenticationManager,
-        userDetailService,
-        userService,
-        passwordEncoder,
-        blackListService);
+    securityService = new SecurityServiceImpl(
+      userMapper,
+      jwt,
+      authenticationManager,
+      userDetailService,
+      userService,
+      passwordEncoder,
+      blackListService,
+      new ObjectMapper()
+    );
+
+    SecurityContextHolder.clearContext();
   }
 
   @Test
@@ -83,15 +87,12 @@ public class SecurityServiceTest {
     when(userService.findUserByLogin(userDto.getLogin())).thenReturn(Optional.empty());
     when(userService.findUserByEmail(userDto.getEmail())).thenReturn(Optional.empty());
     when(userService.save(any())).thenReturn(user);
-    when(authenticationManager.authenticate((any())))
-      .thenReturn(Mono.just(new AuthenticationMock()));
+    when(authenticationManager.authenticate(any()))
+      .thenReturn(new AuthenticationMock());
 
-    StepVerifier.create(securityService.register(userDto))
-      .assertNext(
-        result -> {
-          assertThat(result.getData().getId()).isEqualTo(user.getId());
-        })
-      .verifyComplete();
+    var result = securityService.register(userDto);
+
+    assertThat(result.getData().getId()).isEqualTo(user.getId());
   }
 
   @Test
@@ -101,7 +102,8 @@ public class SecurityServiceTest {
 
     when(userService.findUserByLogin(userDto.getLogin())).thenReturn(Optional.of(user));
 
-    StepVerifier.create(securityService.register(userDto)).verifyError(EntityExistsException.class);
+    assertThatThrownBy(() -> securityService.register(userDto))
+      .isInstanceOf(EntityExistsException.class);
   }
 
   @Test
@@ -112,16 +114,13 @@ public class SecurityServiceTest {
     var user = TestData.createUser();
 
     when(userService.findUserByLogin(loginDto.getLogin())).thenReturn(Optional.of(user));
-    when(authenticationManager.authenticate((any())))
-      .thenReturn(Mono.just(new AuthenticationMock()));
+    when(authenticationManager.authenticate(any()))
+      .thenReturn(new AuthenticationMock());
     when(passwordEncoder.matches(any(), any())).thenReturn(true);
 
-    StepVerifier.create(securityService.login(loginDto))
-      .assertNext(
-        result -> {
-          assertThat(result.getData().getUser().getId()).isEqualTo(user.getId());
-        })
-      .verifyComplete();
+    var result = securityService.login(loginDto);
+
+    assertThat(result.getData().getUser().getId()).isEqualTo(user.getId());
   }
 
   @Test
@@ -132,7 +131,8 @@ public class SecurityServiceTest {
 
     when(userService.findUserByLogin(loginDto.getLogin())).thenReturn(Optional.empty());
 
-    StepVerifier.create(securityService.login(loginDto)).verifyError(EntityNotFoundException.class);
+    assertThatThrownBy(() -> securityService.login(loginDto))
+      .isInstanceOf(EntityNotFoundException.class);
   }
 
   @Test
@@ -146,18 +146,15 @@ public class SecurityServiceTest {
     when(userService.findUserByLogin(user.getLogin())).thenReturn(Optional.empty());
     when(userService.findUserByEmail(user.getEmail())).thenReturn(Optional.empty());
     when(userService.save(any())).thenReturn(user);
-    when(userDetailService.getCurrentUser()).thenReturn(Mono.just(user));
-    when(authenticationManager.authenticate((any())))
-      .thenReturn(Mono.just(new AuthenticationMock()));
+    when(userDetailService.getCurrentUser()).thenReturn(user);
+    when(authenticationManager.authenticate(any()))
+      .thenReturn(new AuthenticationMock());
 
-    StepVerifier.create(securityService.editUser(editDto, "Bearer 12345"))
-      .assertNext(
-        result -> {
-          assertThat(result.getData().getLogin()).isEqualTo(editDto.getLogin());
-          assertThat(result.getData().getEmail()).isEqualTo(editDto.getEmail());
-          assertThat(result.getData().getFirstName()).isEqualTo(editDto.getFirstName());
-        })
-      .verifyComplete();
+    var result = securityService.editUser(editDto, "Bearer 12345");
+
+    assertThat(result.getData().getLogin()).isEqualTo(editDto.getLogin());
+    assertThat(result.getData().getEmail()).isEqualTo(editDto.getEmail());
+    assertThat(result.getData().getFirstName()).isEqualTo(editDto.getFirstName());
   }
 
   @Test
@@ -167,10 +164,10 @@ public class SecurityServiceTest {
     editDto.setId(UUID.randomUUID());
     user.setUserPrivileges(Collections.emptySet());
 
-    when(userDetailService.getCurrentUser()).thenReturn(Mono.just(user));
+    when(userDetailService.getCurrentUser()).thenReturn(user);
 
-    StepVerifier.create(securityService.editUser(editDto, "Bearer 12345"))
-      .verifyError(AccessDeniedException.class);
+    assertThatThrownBy(() -> securityService.editUser(editDto, "Bearer 12345"))
+      .isInstanceOf(AccessDeniedException.class);
   }
 
   @Test
@@ -183,12 +180,9 @@ public class SecurityServiceTest {
     when(userService.findById(dto.getId())).thenReturn(user);
     when(userService.changeStatus(user, UserStatus.DEACTIVATED)).thenReturn(user);
 
-    StepVerifier.create(securityService.deactivate(dto))
-      .assertNext(
-        result -> {
-          assertThat(result.getData().getId()).isEqualTo(user.getId());
-        })
-      .verifyComplete();
+    var result = securityService.deactivate(dto);
+
+    assertThat(result.getData().getId()).isEqualTo(user.getId());
   }
 
   @Test
@@ -197,16 +191,13 @@ public class SecurityServiceTest {
     var user = TestData.createUser();
     dto.setId(user.getId());
 
-    when(userDetailService.getCurrentUser()).thenReturn(Mono.just(user));
+    when(userDetailService.getCurrentUser()).thenReturn(user);
     when(userService.findById(user.getId())).thenReturn(user);
     when(userService.changeStatus(user, UserStatus.EMAIL_ACTIVATED)).thenReturn(user);
 
-    StepVerifier.create(securityService.activateEmail(dto))
-      .assertNext(
-        result -> {
-          assertThat(result.getData().getId()).isEqualTo(user.getId());
-        })
-      .verifyComplete();
+    var result = securityService.activateEmail(dto);
+
+    assertThat(result.getData().getId()).isEqualTo(user.getId());
   }
 
   @Test
@@ -214,21 +205,19 @@ public class SecurityServiceTest {
     var user = TestData.createUser();
 
     when(userService.findById(user.getId())).thenReturn(user);
-    when(userDetailService.getCurrentUser()).thenReturn(Mono.just(user));
+    when(userDetailService.getCurrentUser()).thenReturn(user);
 
-    StepVerifier.create(securityService.getUser(user.getId()))
-      .assertNext(
-        result -> {
-          assertThat(result.getData().getId()).isEqualTo(user.getId());
-        })
-      .verifyComplete();
+    var result = securityService.getUser(user.getId());
+
+    assertThat(result.getData().getId()).isEqualTo(user.getId());
   }
 
   private static class AuthenticationMock implements Authentication {
+    private boolean authenticated = true;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-      return null;
+      return Collections.emptyList();
     }
 
     @Override
@@ -243,21 +232,22 @@ public class SecurityServiceTest {
 
     @Override
     public Object getPrincipal() {
-      return null;
+      return "user";
     }
 
     @Override
     public boolean isAuthenticated() {
-      return false;
+      return authenticated;
     }
 
     @Override
     public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException {
+      this.authenticated = isAuthenticated;
     }
 
     @Override
     public String getName() {
-      return null;
+      return "user";
     }
   }
 }

@@ -1,7 +1,8 @@
 spring:
+  config:
+    import: classpath:logbook.yml
   main:
     allow-bean-definition-overriding: true
-    web-application-type: reactive
   application:
     name: rikser-security
   datasource:
@@ -42,12 +43,12 @@ scheduler:
   clear-black-list:
     cron: "0 0 * * * *"
 
-security:
-  enabled: true
-  service:
-    enabled: false
-    url: http://localhost:8081
-
+bundle:
+  security:
+    enabled: true
+    service:
+      enabled: false
+      url: http://localhost:8081
 
 management:
   endpoints:
@@ -60,3 +61,29 @@ management:
       status:
         http-mapping:
           down: 503
+
+logging:
+  level:
+    org.zalando.logbook: TRACE
+
+logbook:
+  format:
+    style: json
+  obfuscate:
+    headers:
+      - Authorization
+    json-body-fields:
+      - password
+      - email
+      - token
+      - login
+      - password
+      - privileges
+      - authorities
+      - username
+      - isAccountNonExpired
+      - isAccountNonLocked
+      - isCredentialsNonExpired
+      - isEnabled
+  write:
+    max-body-size: 100000

@@ -9,14 +9,13 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
+import org.springframework.transaction.annotation.Transactional;
 import rikser123.bundle.dto.response.RikserResponseItem;
 import rikser123.bundle.utils.RikserResponseUtils;
 import rikser123.security.component.Jwt;
@@ -38,9 +37,7 @@ import rikser123.security.service.SecurityService;
 import rikser123.security.service.UserDetailSecurityService;
 import rikser123.security.service.UserService;
 
-import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 @AllArgsConstructor
@@ -49,7 +46,7 @@ public class SecurityServiceImpl implements SecurityService {
   public static final String BEARER_PREFIX = "Bearer ";
   private final UserMapper userMapper;
   private final Jwt jwt;
-  private final ReactiveAuthenticationManager authenticationManager;
+  private final AuthenticationManager authenticationManager;
   private final UserDetailSecurityService userDetailSecurityService;
   private final UserService userService;
   private final PasswordEncoder passwordEncoder;
@@ -57,215 +54,152 @@ public class SecurityServiceImpl implements SecurityService {
   private final ObjectMapper objectMapper;
 
   @Override
-  public Mono<RikserResponseItem<CreateUserResponseDto>> register(CreateUserRequestDto requestDto) {
-    return Mono.fromCallable(() -> userService.findUserByLogin(requestDto.getLogin()))
-      .flatMap(
-        existedSameLoginOpt -> {
-          if (existedSameLoginOpt.isPresent()) {
-            return Mono.error(
-              new EntityExistsException(
-                String.format(
-                  "Пользователь с логином %s уже зарегистрирован",
-                  requestDto.getLogin())));
-          }
+  @Transactional
+  public RikserResponseItem<CreateUserResponseDto> register(CreateUserRequestDto requestDto) {
+    var existedSameLoginOpt = userService.findUserByLogin(requestDto.getLogin());
+    if (existedSameLoginOpt.isPresent()) {
+      throw new EntityExistsException(
+        String.format("Пользователь с логином %s уже зарегистрирован", requestDto.getLogin()));
+    }
 
-          return Mono.fromCallable(() -> userService.findUserByEmail(requestDto.getEmail()));
-        })
-      .flatMap(
-        existedSameEmailOpt -> {
-          if (existedSameEmailOpt.isPresent()) {
-            return Mono.error(
-              new EntityExistsException(
-                String.format(
-                  "Пользователь с email %s уже зарегистрирован", requestDto.getEmail())));
-          }
+    var existedSameEmailOpt = userService.findUserByEmail(requestDto.getEmail());
+    if (existedSameEmailOpt.isPresent()) {
+      throw new EntityExistsException(
+        String.format("Пользователь с email %s уже зарегистрирован", requestDto.getEmail()));
+    }
 
-          return Mono.fromCallable(() -> userMapper.mapUser(requestDto));
-        })
-      .subscribeOn(Schedulers.boundedElastic())
-      .map(userService::save)
-      .flatMap(
-        user ->
-          setAuthentication(requestDto.getLogin(), requestDto.getPassword()).thenReturn(user))
-      .map(
-        user -> {
-          var token = jwt.generateToken(user);
+    var user = userMapper.mapUser(requestDto);
+    var savedUser = userService.save(user);
+    var token = jwt.generateToken(savedUser);
 
-          var responseDto = new CreateUserResponseDto();
-          responseDto.setId(user.getId());
-          responseDto.setToken(token);
-          return RikserResponseUtils.createResponse(responseDto);
-        });
+    setAuthentication(requestDto.getLogin(), requestDto.getPassword(), token);
+
+
+    var responseDto = new CreateUserResponseDto();
+    responseDto.setId(savedUser.getId());
+    responseDto.setToken(token);
+
+    return RikserResponseUtils.createResponse(responseDto);
   }
 
   @Override
-  public Mono<RikserResponseItem<LoginResponseDto>> login(LoginRequestDto requestDto) {
+  public RikserResponseItem<LoginResponseDto> login(LoginRequestDto requestDto) {
     var userLogin = requestDto.getLogin();
 
-    return Mono.fromCallable(() -> userService.findUserByLogin(requestDto.getLogin()))
-      .subscribeOn(Schedulers.boundedElastic())
-      .flatMap(
-        userOpt -> {
-          if (userOpt.isEmpty()) {
-            return Mono.error(
-              new EntityNotFoundException(
-                String.format("Пользователь с логином %s не найден", userLogin)));
-          }
+    try {
+      var user = userService.findUserByLogin(requestDto.getLogin()).orElseThrow(() ->
+        new EntityNotFoundException(String.format("Пользователь с логином %s не найден", userLogin)));
 
-          var user = userOpt.get();
-          var isMatches = passwordEncoder.matches(requestDto.getPassword(), user.getPassword());
-          if (!isMatches) {
-            return Mono.error(new BadCredentialsException("Неверный пароль!"));
-          }
+      var isMatches = passwordEncoder.matches(requestDto.getPassword(), user.getPassword());
+      if (!isMatches) {
+        throw new BadCredentialsException("Неверный пароль!");
+      }
 
-          return Mono.just(user);
-        })
-      .flatMap(
-        user ->
-          setAuthentication(requestDto.getLogin(), requestDto.getPassword()).thenReturn(user))
-      .map(
-        user -> {
-          var token = jwt.generateToken(user);
-          var responseDto = new LoginResponseDto();
-          responseDto.setToken(token);
+      var token = jwt.generateToken(user);
+      setAuthentication(requestDto.getLogin(), requestDto.getPassword(), token);
 
-          var userDto = userMapper.mapUserToDto(user);
-          responseDto.setUser(userDto);
+      var responseDto = new LoginResponseDto();
+      responseDto.setToken(token);
 
-          return RikserResponseUtils.createResponse(responseDto);
-        })
-      .onErrorResume(
-        BadCredentialsException.class,
-        exception -> {
-          log.warn("Ошибка авторизации", exception);
-          var response = new RikserResponseItem<LoginResponseDto>();
-          response.setMessage(exception.getMessage());
-          response.setHttpStatus(HttpStatus.UNAUTHORIZED);
-          return Mono.just(response);
-        });
+      var userDto = userMapper.mapUserToDto(user);
+      responseDto.setUser(userDto);
+
+      return RikserResponseUtils.createResponse(responseDto);
+
+    } catch (BadCredentialsException e) {
+      log.warn("Ошибка авторизации", e);
+      var response = new RikserResponseItem<LoginResponseDto>();
+      response.setMessage(e.getMessage());
+      response.setHttpStatus(HttpStatus.UNAUTHORIZED);
+      return response;
+    }
   }
 
   @Override
-  public Mono<RikserResponseItem<UserResponseDto>> editUser(EditUserDto userDto, String oldToken) {
-    var oldLogin = new AtomicReference<>("");
-    Objects.requireNonNull(oldToken);
+  @Transactional
+  public RikserResponseItem<UserResponseDto> editUser(EditUserDto userDto, String oldToken) {
+    checkAccess(userDto.getId(), Privilege.USER_EDIT);
 
-    return checkAccess(userDto.getId(), Privilege.USER_EDIT)
-      .map(
-        data -> {
-          var updatedUser = userService.findById(userDto.getId());
-          oldLogin.set(updatedUser.getLogin());
-          userMapper.updateUser(userDto, updatedUser);
-          return updatedUser;
-        })
-      .subscribeOn(Schedulers.boundedElastic())
-      .flatMap(
-        user -> {
-          var existedWithSameLogin =
-            userService.findUserByLoginAndIdIsNot(user.getLogin(), user.getId());
+    var updatedUser = userService.findById(userDto.getId());
+    var oldLogin = updatedUser.getLogin();
+    userMapper.updateUser(userDto, updatedUser);
 
-          if (existedWithSameLogin.isPresent()) {
-            return Mono.error(
-              new EntityExistsException(
-                String.format(
-                  "Пользователь с логином %s уже зарегистрирован", user.getLogin())));
-          }
+    var existedWithSameLogin = userService.findUserByLoginAndIdIsNot(updatedUser.getLogin(), updatedUser.getId());
+    if (existedWithSameLogin.isPresent()) {
+      throw new EntityExistsException(
+        String.format("Пользователь с логином %s уже зарегистрирован", updatedUser.getLogin()));
+    }
 
-          return Mono.just(user);
-        })
-      .flatMap(
-        user -> {
-          var existedWithSameEmail =
-            userService.findUserByEmailAndIdIsNot(user.getEmail(), user.getId());
+    var existedWithSameEmail = userService.findUserByEmailAndIdIsNot(updatedUser.getEmail(), updatedUser.getId());
+    if (existedWithSameEmail.isPresent()) {
+      throw new EntityExistsException(
+        String.format("Пользователь с email %s уже зарегистрирован", updatedUser.getEmail()));
+    }
 
-          if (existedWithSameEmail.isPresent()) {
-            return Mono.error(
-              new EntityExistsException(
-                String.format(
-                  "Пользователь с email %s уже зарегистрирован", user.getEmail())));
-          }
+    var savedUser = userService.save(updatedUser);
 
-          return Mono.just(user);
-        })
-      .map(userService::save)
-      .flatMap(
-        user -> {
-          var isLoginEqual = user.getLogin().equals(oldLogin.get());
-          var responseDto = userMapper.mapUserToDto(user);
+    var responseDto = userMapper.mapUserToDto(savedUser);
+    var isLoginEqual = savedUser.getLogin().equals(oldLogin);
 
-          if (isLoginEqual) {
-            return Mono.just(responseDto);
-          }
+    if (!isLoginEqual) {
+      var token = jwt.generateToken(savedUser);
+      responseDto.setToken(token);
 
-          var token = jwt.generateToken(user);
-          responseDto.setToken(token);
+      if (oldToken.startsWith(BEARER_PREFIX)) {
+        var oldTokenContent = extractToken(oldToken);
+        blackListService.addToken(oldTokenContent, savedUser.getId());
+      }
 
-          if (oldToken.startsWith(BEARER_PREFIX)) {
-            var oldTokenContent = extractToken(oldToken);
-            blackListService.addToken(oldTokenContent, user.getId());
-          }
+      setAuthentication(userDto.getLogin(), userDto.getPassword(), token);
+    }
 
-          return setAuthentication(userDto.getLogin(), userDto.getPassword())
-            .thenReturn(responseDto);
-        })
-      .map(RikserResponseUtils::createResponse);
+    return RikserResponseUtils.createResponse(responseDto);
   }
 
   @Override
-  public Mono<RikserResponseItem<UserDeactivateResponse>> deactivate(
-    UserDeactivateRequestDto requestDto) {
-    return Mono.fromCallable(() -> userService.findById(requestDto.getId()))
-      .map(user -> userService.changeStatus(user, UserStatus.DEACTIVATED))
-      .map(
-        user -> {
-          var userIdDto = new UserDeactivateResponse();
-          userIdDto.setId(user.getId());
+  public RikserResponseItem<UserDeactivateResponse> deactivate(UserDeactivateRequestDto requestDto) {
+    var user = userService.findById(requestDto.getId());
+    userService.changeStatus(user, UserStatus.DEACTIVATED);
 
-          return RikserResponseUtils.createResponse(userIdDto);
-        });
+    var userIdDto = new UserDeactivateResponse();
+    userIdDto.setId(user.getId());
+
+    return RikserResponseUtils.createResponse(userIdDto);
   }
 
   @Override
-  public Mono<RikserResponseItem<UserEmailResponse>> activateEmail(UserEmailRequestDto requestDto) {
-    return checkAccess(requestDto.getId(), Privilege.USER_EDIT)
-      .map(
-        data -> {
-          var user = userService.findById(requestDto.getId());
-          userService.changeStatus(user, UserStatus.EMAIL_ACTIVATED);
-          return user;
-        })
-      .subscribeOn(Schedulers.boundedElastic())
-      .map(
-        user -> {
-          var userIdDto = new UserEmailResponse();
-          userIdDto.setId(user.getId());
+  public RikserResponseItem<UserEmailResponse> activateEmail(UserEmailRequestDto requestDto) {
+    checkAccess(requestDto.getId(), Privilege.USER_EDIT);
 
-          return RikserResponseUtils.createResponse(userIdDto);
-        });
+    var user = userService.findById(requestDto.getId());
+    userService.changeStatus(user, UserStatus.EMAIL_ACTIVATED);
+
+    var userIdDto = new UserEmailResponse();
+    userIdDto.setId(user.getId());
+
+    return RikserResponseUtils.createResponse(userIdDto);
   }
 
   @Override
-  public Mono<RikserResponseItem<UserResponseDto>> getUser(UUID id) {
-    return checkAccess(id, Privilege.USER_VIEW)
-      .publishOn(Schedulers.boundedElastic())
-      .map(data -> userService.findById(id))
-      .map(
-        user -> {
-          var userDto = userMapper.mapUserToDto(user);
-          return RikserResponseUtils.createResponse(userDto);
-        });
+  public RikserResponseItem<UserResponseDto> getUser(UUID id) {
+    checkAccess(id, Privilege.USER_VIEW);
+
+    var user = userService.findById(id);
+    var userDto = userMapper.mapUserToDto(user);
+
+    return RikserResponseUtils.createResponse(userDto);
   }
 
   @Override
-  public Mono<RikserResponseItem<JsonNode>> getUserByToken(String authToken) {
-    return Mono.fromCallable(() -> extractToken(authToken))
-      .flatMap(userDetailSecurityService::getByUsername)
-      .map(details -> {
-        var user = (rikser123.bundle.dto.User) details;
-        ObjectNode node = objectMapper.valueToTree(user);
-        node.remove("authorities");
-        return RikserResponseUtils.createResponse(node);
-      });
+  public RikserResponseItem<JsonNode> getUserByToken(String authToken) {
+    var token = extractToken(authToken);
+    var details = userDetailSecurityService.getByUsername(token);
+    var user = (rikser123.bundle.dto.User) details;
+
+    ObjectNode node = objectMapper.valueToTree(user);
+    node.remove("authorities");
+
+    return RikserResponseUtils.createResponse(node);
   }
 
 
@@ -275,17 +209,14 @@ public class SecurityServiceImpl implements SecurityService {
    * @param login    логин пользователя
    * @param password пароль пользователя
    */
-  private Mono<Void> setAuthentication(String login, String password) {
-    var auth =
-      authenticationManager.authenticate(
-        new UsernamePasswordAuthenticationToken(login, password));
-    var context = ReactiveSecurityContextHolder.getContext();
-    return Mono.zip(auth, context)
-      .flatMap(
-        tuple -> {
-          tuple.getT2().setAuthentication(tuple.getT1());
-          return Mono.empty();
-        });
+  private void setAuthentication(String login, String password, String token) {
+    var authToken = new UsernamePasswordAuthenticationToken(login, password);
+    authToken.setDetails(token);
+
+    var auth = authenticationManager.authenticate(authToken);
+
+    var context = SecurityContextHolder.getContext();
+    context.setAuthentication(auth);
   }
 
   /**
@@ -293,19 +224,15 @@ public class SecurityServiceImpl implements SecurityService {
    *
    * @param userId Id пользователя
    */
-  private Mono<rikser123.bundle.dto.User> checkAccess(UUID userId, Privilege privilege) {
-    return userDetailSecurityService
-      .getCurrentUser()
-      .flatMap(
-        userDetails -> {
-          var user = (rikser123.bundle.dto.User) userDetails;
+  private rikser123.bundle.dto.User checkAccess(UUID userId, Privilege privilege) {
+    var userDetails = userDetailSecurityService.getCurrentUser();
+    var user = (rikser123.bundle.dto.User) userDetails;
 
-          if (!userId.equals(user.getId()) && !user.getPrivileges().contains(privilege)) {
-            return Mono.error(new AccessDeniedException("Доступ запрещен"));
-          }
+    if (!userId.equals(user.getId()) && !user.getPrivileges().contains(privilege)) {
+      throw new AccessDeniedException("Доступ запрещен");
+    }
 
-          return Mono.just(user);
-        });
+    return user;
   }
 
   /**

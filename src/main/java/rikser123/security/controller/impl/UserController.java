@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Mono;
 import rikser123.bundle.dto.request.RikserRequestItem;
 import rikser123.bundle.dto.response.RikserResponseItem;
 import rikser123.security.controller.UserApi;
@@ -40,43 +39,43 @@ public class UserController implements UserApi {
   private final SecurityService securityService;
 
   @Override
-  public Mono<RikserResponseItem<CreateUserResponseDto>> register(
+  public RikserResponseItem<CreateUserResponseDto> register(
     @Valid @RequestBody RikserRequestItem<CreateUserRequestDto> registerDto) {
     return securityService.register(registerDto.getData());
   }
 
   @Override
-  public Mono<RikserResponseItem<LoginResponseDto>> login(
+  public RikserResponseItem<LoginResponseDto> login(
     @Valid @RequestBody RikserRequestItem<LoginRequestDto> loginDto) {
     return securityService.login(loginDto.getData());
   }
 
   @Override
-  public Mono<RikserResponseItem<UserResponseDto>> edit(
+  public RikserResponseItem<UserResponseDto> edit(
     @Valid @RequestBody RikserRequestItem<EditUserDto> editDto,
     @RequestHeader("Authorization") String authToken) {
     return securityService.editUser(editDto.getData(), authToken);
   }
 
   @Override
-  public Mono<RikserResponseItem<UserDeactivateResponse>> deactivate(
+  public RikserResponseItem<UserDeactivateResponse> deactivate(
     @Valid @RequestBody RikserRequestItem<UserDeactivateRequestDto> deactivateDto) {
     return securityService.deactivate(deactivateDto.getData());
   }
 
   @Override
-  public Mono<RikserResponseItem<UserEmailResponse>> activateEmail(
+  public RikserResponseItem<UserEmailResponse> activateEmail(
     @Valid @RequestBody RikserRequestItem<UserEmailRequestDto> deactivateDto) {
     return securityService.activateEmail(deactivateDto.getData());
   }
 
   @Override
-  public Mono<RikserResponseItem<UserResponseDto>> getUser(@PathVariable UUID id) {
+  public RikserResponseItem<UserResponseDto> getUser(@PathVariable UUID id) {
     return securityService.getUser(id);
   }
 
   @Override
-  public Mono<RikserResponseItem<JsonNode>> getByToken(String authToken) {
+  public RikserResponseItem<JsonNode> getByToken(String authToken) {
     return securityService.getUserByToken(authToken);
   }
 }
