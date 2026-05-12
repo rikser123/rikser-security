@@ -22,6 +22,7 @@ public class UserDetailSecurityService implements UserDetailService {
   private final UserMapper userMapper;
   private final Jwt jwt;
   private final BlackListService blackListService;
+  private final RefreshTokenService refreshTokenService;
 
   public UserDetails getCurrentUser() {
     var authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -55,5 +56,14 @@ public class UserDetailSecurityService implements UserDetailService {
       .orElseThrow(() -> new EntityNotFoundException("Пользователь не найден"));
 
     return userMapper.mapToSecurityUser(user);
+  }
+
+  @Override
+  public String updateToken(String refreshToken) {
+    var username = jwt.extractUserName(refreshToken);
+    var user = userService.findUserByLogin(username)
+      .orElseThrow(() -> new EntityNotFoundException("Пользователь не найден"));
+
+    return refreshTokenService.updateAccessToken(user, refreshToken);
   }
 }

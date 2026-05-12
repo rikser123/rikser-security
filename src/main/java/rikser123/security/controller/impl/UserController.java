@@ -82,9 +82,8 @@ public class UserController implements UserApi {
 
   @Override
   public RikserResponseItem<UpdateTokenResponseDto> refreshToken(
-    @PathVariable UUID id,
     @RequestHeader("X-Refresh-Token") String refreshToken
   ) {
-    return securityService.updateToken(id, refreshToken);
+    return securityService.updateToken(refreshToken);
   }
 }

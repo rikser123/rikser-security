@@ -312,11 +312,9 @@ public class UserApiTest extends BaseConfig {
   void updateToken() throws Exception {
     var user = TestData.createUser();
     userRepository.save(user);
-    var token = generateAuthHeader(user);
     var refreshToken = refreshTokenService.create(user);
 
     client.perform(get("/api/v1/user/token/refresh/" + user.getId())
-        .header("Authorization", token)
         .header("X-Refresh-Token", refreshToken)
         .contentType(MediaType.APPLICATION_JSON))
       .andExpect(status().isOk())

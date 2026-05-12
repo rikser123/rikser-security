@@ -81,9 +81,8 @@ public interface SecurityService {
   /**
    * Обновляет access токен по refresh токену
    *
-   * @param userId       идентификатор пользователя
    * @param refreshToken refresh токен
    * @return ответ с новым access токеном
    */
-  RikserResponseItem<UpdateTokenResponseDto> updateToken(UUID userId, String refreshToken);
+  RikserResponseItem<UpdateTokenResponseDto> updateToken(String refreshToken);
 }

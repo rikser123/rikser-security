@@ -93,7 +93,6 @@ public interface UserApi {
   @Operation(description = "Обновление токена")
   @ResponseStatus(HttpStatus.OK)
   RikserResponseItem<UpdateTokenResponseDto> refreshToken(
-    @PathVariable UUID id,
     @RequestHeader("X-Refresh-Token") String refreshToken
   );
 }

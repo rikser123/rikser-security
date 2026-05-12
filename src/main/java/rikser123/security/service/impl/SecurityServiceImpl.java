@@ -214,11 +214,13 @@ public class SecurityServiceImpl implements SecurityService {
   }
 
   @Override
-  public RikserResponseItem<UpdateTokenResponseDto> updateToken(UUID userId, String refreshToken) {
-    var currentUser = userService.findById(userId);
+  public RikserResponseItem<UpdateTokenResponseDto> updateToken(String refreshToken) {
+    var token = userDetailSecurityService.updateToken(refreshToken);
     var tokenResponseDto = new UpdateTokenResponseDto();
-    var token = refreshTokenService.updateAccessToken(currentUser, refreshToken);
     tokenResponseDto.setToken(token);
+
+    var user = userDetailSecurityService.getCurrentUser();
+    setAuthentication(user.getUsername(), user.getPassword(), token, refreshToken);
 
     return RikserResponseUtils.createResponse(tokenResponseDto);
   }
