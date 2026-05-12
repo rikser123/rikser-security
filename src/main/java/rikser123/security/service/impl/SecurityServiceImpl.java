@@ -219,9 +219,6 @@ public class SecurityServiceImpl implements SecurityService {
     var tokenResponseDto = new UpdateTokenResponseDto();
     tokenResponseDto.setToken(token);
 
-    var user = userDetailSecurityService.getCurrentUser();
-    setAuthentication(user.getUsername(), user.getPassword(), token, refreshToken);
-
     return RikserResponseUtils.createResponse(tokenResponseDto);
   }
 

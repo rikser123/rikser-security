@@ -314,7 +314,7 @@ public class UserApiTest extends BaseConfig {
     userRepository.save(user);
     var refreshToken = refreshTokenService.create(user);
 
-    client.perform(get("/api/v1/user/token/refresh/" + user.getId())
+    client.perform(get("/api/v1/user/token/refresh")
         .header("X-Refresh-Token", refreshToken)
         .contentType(MediaType.APPLICATION_JSON))
       .andExpect(status().isOk())

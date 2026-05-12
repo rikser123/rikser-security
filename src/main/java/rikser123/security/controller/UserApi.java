@@ -89,7 +89,7 @@ public interface UserApi {
   @ResponseStatus(HttpStatus.OK)
   RikserResponseItem<JsonNode> getByToken(@RequestHeader("Authorization") String authToken);
 
-  @GetMapping("/token/refresh/{id}")
+  @GetMapping("/token/refresh")
   @Operation(description = "Обновление токена")
   @ResponseStatus(HttpStatus.OK)
   RikserResponseItem<UpdateTokenResponseDto> refreshToken(
