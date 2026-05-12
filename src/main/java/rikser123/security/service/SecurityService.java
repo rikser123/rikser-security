@@ -9,6 +9,7 @@ import rikser123.security.dto.request.UserDeactivateRequestDto;
 import rikser123.security.dto.request.UserEmailRequestDto;
 import rikser123.security.dto.response.CreateUserResponseDto;
 import rikser123.security.dto.response.LoginResponseDto;
+import rikser123.security.dto.response.UpdateTokenResponseDto;
 import rikser123.security.dto.response.UserDeactivateResponse;
 import rikser123.security.dto.response.UserEmailResponse;
 import rikser123.security.dto.response.UserResponseDto;
@@ -76,4 +77,13 @@ public interface SecurityService {
    * @return Ответ на получение пользователя
    */
   RikserResponseItem<JsonNode> getUserByToken(String authToken);
+
+  /**
+   * Обновляет access токен по refresh токену
+   *
+   * @param userId       идентификатор пользователя
+   * @param refreshToken refresh токен
+   * @return ответ с новым access токеном
+   */
+  RikserResponseItem<UpdateTokenResponseDto> updateToken(UUID userId, String refreshToken);
 }

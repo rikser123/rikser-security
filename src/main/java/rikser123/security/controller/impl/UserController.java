@@ -20,6 +20,7 @@ import rikser123.security.dto.request.UserDeactivateRequestDto;
 import rikser123.security.dto.request.UserEmailRequestDto;
 import rikser123.security.dto.response.CreateUserResponseDto;
 import rikser123.security.dto.response.LoginResponseDto;
+import rikser123.security.dto.response.UpdateTokenResponseDto;
 import rikser123.security.dto.response.UserDeactivateResponse;
 import rikser123.security.dto.response.UserEmailResponse;
 import rikser123.security.dto.response.UserResponseDto;
@@ -77,5 +78,13 @@ public class UserController implements UserApi {
   @Override
   public RikserResponseItem<JsonNode> getByToken(String authToken) {
     return securityService.getUserByToken(authToken);
+  }
+
+  @Override
+  public RikserResponseItem<UpdateTokenResponseDto> refreshToken(
+    @PathVariable UUID id,
+    @RequestHeader("X-Refresh-Token") String refreshToken
+  ) {
+    return securityService.updateToken(id, refreshToken);
   }
 }

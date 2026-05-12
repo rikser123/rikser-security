@@ -1,15 +1,18 @@
 spring:
   main:
     allow-bean-definition-overriding: true
-    web-application-type: reactive
   application:
     name: rikser-security
   liquibase:
     change-log: classpath:/db/changelog/changelog-master.xml
     drop-first: true
+  cloud:
+    compatibility-verifier:
+      enabled: false
 
 jwt:
-  expirationTime: 86400000
+  expirationTime: 3600000
+  refreshExpirationTime: 2592000000
   secret: rikser123_aifhAISDdiO8198Lxkcn
 
 springdoc:

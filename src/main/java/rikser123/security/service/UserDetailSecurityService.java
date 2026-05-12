@@ -4,6 +4,7 @@ import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -15,6 +16,7 @@ import rikser123.security.mapper.UserMapper;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Primary
 public class UserDetailSecurityService implements UserDetailService {
   private final UserService userService;
   private final UserMapper userMapper;

@@ -3,19 +3,23 @@ package rikser123.security.component;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import java.util.Base64;
-import java.util.Date;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import rikser123.security.repository.entity.User;
 
+import java.util.Base64;
+import java.util.Date;
+
 @Component
 @Slf4j
 public class Jwt {
   @Value("${jwt.expirationTime}")
   private long expirationMs;
+
+  @Value("${jwt.refreshExpirationTime}")
+  private long refreshExpirationTime;
 
   private byte[] secret;
 
@@ -25,16 +29,26 @@ public class Jwt {
     this.secret = encoder.encode(rawSecret.getBytes());
   }
 
+  public String generateRefreshToken(User user) {
+    return Jwts.builder()
+      .subject(user.getLogin())
+      .claim("id", user.getId())
+      .issuedAt(new Date())
+      .expiration(new Date(System.currentTimeMillis() + refreshExpirationTime))
+      .signWith(SignatureAlgorithm.HS256, secret)
+      .compact();
+  }
+
   public String generateToken(User user) {
     return Jwts.builder()
-        .subject(user.getLogin())
-        .claim("id", user.getId())
-        .claim("email", user.getEmail())
-        .claim("status", user.getStatus())
-        .issuedAt(new Date())
-        .expiration(new Date(System.currentTimeMillis() + expirationMs))
-        .signWith(SignatureAlgorithm.HS256, secret)
-        .compact();
+      .subject(user.getLogin())
+      .claim("id", user.getId())
+      .claim("email", user.getEmail())
+      .claim("status", user.getStatus())
+      .issuedAt(new Date())
+      .expiration(new Date(System.currentTimeMillis() + expirationMs))
+      .signWith(SignatureAlgorithm.HS256, secret)
+      .compact();
   }
 
   public String extractUserName(String token) {

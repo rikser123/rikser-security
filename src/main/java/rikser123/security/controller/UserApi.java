@@ -26,6 +26,7 @@ import rikser123.security.dto.request.UserDeactivateRequestDto;
 import rikser123.security.dto.request.UserEmailRequestDto;
 import rikser123.security.dto.response.CreateUserResponseDto;
 import rikser123.security.dto.response.LoginResponseDto;
+import rikser123.security.dto.response.UpdateTokenResponseDto;
 import rikser123.security.dto.response.UserDeactivateResponse;
 import rikser123.security.dto.response.UserEmailResponse;
 import rikser123.security.dto.response.UserResponseDto;
@@ -87,4 +88,12 @@ public interface UserApi {
   @Operation(description = "Получение пользователя по токену")
   @ResponseStatus(HttpStatus.OK)
   RikserResponseItem<JsonNode> getByToken(@RequestHeader("Authorization") String authToken);
+
+  @GetMapping("/token/refresh/{id}")
+  @Operation(description = "Обновление токена")
+  @ResponseStatus(HttpStatus.OK)
+  RikserResponseItem<UpdateTokenResponseDto> refreshToken(
+    @PathVariable UUID id,
+    @RequestHeader("X-Refresh-Token") String refreshToken
+  );
 }

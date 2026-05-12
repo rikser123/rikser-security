@@ -32,6 +32,7 @@ server:
 jwt:
   expirationTime: ${EXPIRATION_TIME}
   secret: ${JWT_SECRET}
+  refreshExpirationTime: ${REFRESH_EXPIRATION_TIME}
 
 springdoc:
   api-docs:
@@ -61,29 +62,3 @@ management:
       status:
         http-mapping:
           down: 503
-
-logging:
-  level:
-    org.zalando.logbook: TRACE
-
-logbook:
-  format:
-    style: json
-  obfuscate:
-    headers:
-      - Authorization
-    json-body-fields:
-      - password
-      - email
-      - token
-      - login
-      - password
-      - privileges
-      - authorities
-      - username
-      - isAccountNonExpired
-      - isAccountNonLocked
-      - isCredentialsNonExpired
-      - isEnabled
-  write:
-    max-body-size: 100000

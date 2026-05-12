@@ -5,7 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/** Ответ на логин пользователя */
+/**
+ * Ответ на логин пользователя
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -13,6 +15,9 @@ import lombok.NoArgsConstructor;
 public class LoginResponseDto {
   @Schema(description = "Токен авторизации", example = "dfhdfh8y8273")
   private String token;
+
+  @Schema(description = "Токен обновления", example = "dfhdfh8y8273")
+  private String refreshToken;
 
   @Schema(description = "Возвращаемый пользователь")
   private UserResponseDto user;

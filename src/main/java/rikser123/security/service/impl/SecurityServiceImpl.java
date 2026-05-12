@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import rikser123.bundle.dto.response.RikserResponseItem;
 import rikser123.bundle.utils.RikserResponseUtils;
 import rikser123.security.component.Jwt;
+import rikser123.security.dto.TokenDto;
 import rikser123.security.dto.request.CreateUserRequestDto;
 import rikser123.security.dto.request.EditUserDto;
 import rikser123.security.dto.request.LoginRequestDto;
@@ -26,6 +27,7 @@ import rikser123.security.dto.request.UserDeactivateRequestDto;
 import rikser123.security.dto.request.UserEmailRequestDto;
 import rikser123.security.dto.response.CreateUserResponseDto;
 import rikser123.security.dto.response.LoginResponseDto;
+import rikser123.security.dto.response.UpdateTokenResponseDto;
 import rikser123.security.dto.response.UserDeactivateResponse;
 import rikser123.security.dto.response.UserEmailResponse;
 import rikser123.security.dto.response.UserResponseDto;
@@ -33,6 +35,7 @@ import rikser123.security.mapper.UserMapper;
 import rikser123.security.repository.entity.Privilege;
 import rikser123.security.repository.entity.UserStatus;
 import rikser123.security.service.BlackListService;
+import rikser123.security.service.RefreshTokenService;
 import rikser123.security.service.SecurityService;
 import rikser123.security.service.UserDetailSecurityService;
 import rikser123.security.service.UserService;
@@ -44,6 +47,7 @@ import java.util.UUID;
 @Slf4j
 public class SecurityServiceImpl implements SecurityService {
   public static final String BEARER_PREFIX = "Bearer ";
+
   private final UserMapper userMapper;
   private final Jwt jwt;
   private final AuthenticationManager authenticationManager;
@@ -52,6 +56,7 @@ public class SecurityServiceImpl implements SecurityService {
   private final PasswordEncoder passwordEncoder;
   private final BlackListService blackListService;
   private final ObjectMapper objectMapper;
+  private final RefreshTokenService refreshTokenService;
 
   @Override
   @Transactional
@@ -71,13 +76,14 @@ public class SecurityServiceImpl implements SecurityService {
     var user = userMapper.mapUser(requestDto);
     var savedUser = userService.save(user);
     var token = jwt.generateToken(savedUser);
+    var refreshToken = refreshTokenService.create(user);
 
-    setAuthentication(requestDto.getLogin(), requestDto.getPassword(), token);
-
+    setAuthentication(requestDto.getLogin(), requestDto.getPassword(), token, refreshToken);
 
     var responseDto = new CreateUserResponseDto();
     responseDto.setId(savedUser.getId());
     responseDto.setToken(token);
+    responseDto.setRefreshToken(refreshToken);
 
     return RikserResponseUtils.createResponse(responseDto);
   }
@@ -96,10 +102,12 @@ public class SecurityServiceImpl implements SecurityService {
       }
 
       var token = jwt.generateToken(user);
-      setAuthentication(requestDto.getLogin(), requestDto.getPassword(), token);
+      var refreshToken = refreshTokenService.create(user);
+      setAuthentication(requestDto.getLogin(), requestDto.getPassword(), token, refreshToken);
 
       var responseDto = new LoginResponseDto();
       responseDto.setToken(token);
+      responseDto.setRefreshToken(refreshToken);
 
       var userDto = userMapper.mapUserToDto(user);
       responseDto.setUser(userDto);
@@ -143,14 +151,17 @@ public class SecurityServiceImpl implements SecurityService {
 
     if (!isLoginEqual) {
       var token = jwt.generateToken(savedUser);
+      var refreshToken = refreshTokenService.create(savedUser);
+      refreshTokenService.revoke(savedUser);
       responseDto.setToken(token);
+      responseDto.setRefreshToken(refreshToken);
 
       if (oldToken.startsWith(BEARER_PREFIX)) {
         var oldTokenContent = extractToken(oldToken);
         blackListService.addToken(oldTokenContent, savedUser.getId());
       }
 
-      setAuthentication(userDto.getLogin(), userDto.getPassword(), token);
+      setAuthentication(userDto.getLogin(), userDto.getPassword(), token, refreshToken);
     }
 
     return RikserResponseUtils.createResponse(responseDto);
@@ -202,16 +213,31 @@ public class SecurityServiceImpl implements SecurityService {
     return RikserResponseUtils.createResponse(node);
   }
 
+  @Override
+  public RikserResponseItem<UpdateTokenResponseDto> updateToken(UUID userId, String refreshToken) {
+    var currentUser = userService.findById(userId);
+    var tokenResponseDto = new UpdateTokenResponseDto();
+    var token = refreshTokenService.updateAccessToken(currentUser, refreshToken);
+    tokenResponseDto.setToken(token);
+
+    return RikserResponseUtils.createResponse(tokenResponseDto);
+  }
+
 
   /**
    * Установка аутентикации в контекст
    *
-   * @param login    логин пользователя
-   * @param password пароль пользователя
+   * @param login        логин пользователя
+   * @param password     пароль пользователя
+   * @param token        access_token
+   * @param refreshToken Токен для обновления
    */
-  private void setAuthentication(String login, String password, String token) {
+  private void setAuthentication(String login, String password, String token, String refreshToken) {
     var authToken = new UsernamePasswordAuthenticationToken(login, password);
-    authToken.setDetails(token);
+    var tokenDto = new TokenDto();
+    tokenDto.setRefreshToken(refreshToken);
+    tokenDto.setAccessToken(token);
+    authToken.setDetails(tokenDto);
 
     var auth = authenticationManager.authenticate(authToken);
 

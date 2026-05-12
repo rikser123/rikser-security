@@ -39,24 +39,20 @@ import static org.mockito.Mockito.when;
  */
 @ExtendWith(SpringExtension.class)
 public class SecurityServiceTest {
+  @Mock
+  RefreshTokenService refreshTokenService;
   private SecurityService securityService;
   private UserMapper userMapper;
-
   @Mock
   private Jwt jwt;
-
   @Mock
   private AuthenticationManager authenticationManager;
-
   @Mock
   private UserDetailSecurityService userDetailService;
-
   @Mock
   private UserService userService;
-
   @Mock
   private PasswordEncoder passwordEncoder;
-
   @Mock
   private BlackListService blackListService;
 
@@ -73,7 +69,8 @@ public class SecurityServiceTest {
       userService,
       passwordEncoder,
       blackListService,
-      new ObjectMapper()
+      new ObjectMapper(),
+      refreshTokenService
     );
 
     SecurityContextHolder.clearContext();

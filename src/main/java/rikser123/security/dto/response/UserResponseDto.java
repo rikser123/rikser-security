@@ -1,17 +1,20 @@
 package rikser123.security.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Set;
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import rikser123.security.repository.entity.Privilege;
 import rikser123.security.repository.entity.UserStatus;
 
-/** Информация по пользователю */
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Set;
+import java.util.UUID;
+
+/**
+ * Информация по пользователю
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -52,4 +55,7 @@ public class UserResponseDto {
 
   @Schema(description = "Jwt token")
   private String token;
+
+  @Schema(description = "Refresh Token")
+  private String refreshToken;
 }
