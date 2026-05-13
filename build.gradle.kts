@@ -66,7 +66,6 @@ sourceSets {
     }
 }
 configurations {
-    // Конфигурация для integrationTest
     val integrationTestImplementation by getting {
         extendsFrom(configurations.testImplementation.get())
         extendsFrom(configurations.implementation.get())
@@ -96,7 +95,7 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     mockitoAgent("org.mockito:mockito-core") { isTransitive = false }
     annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
-    implementation("rikser123:bundle:0.0.95")
+    implementation("rikser123:bundle:0.0.96")
     implementation("commons-codec:commons-codec:1.4")
     testImplementation("org.mock-server:mockserver-netty:5.15.0")
     testImplementation("org.springframework.boot:spring-boot-test-autoconfigure")

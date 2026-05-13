@@ -9,8 +9,8 @@ CREATE TABLE users
     last_name   VARCHAR(100)        NOT NULL,
     birth_date  DATE,
     status      VARCHAR             NOT NULL,
-    created     TIMESTAMP,
-    updated     TIMESTAMP
+    created     TIMESTAMP WITH TIME ZONE,
+    updated     TIMESTAMP WITH TIME ZONE
 );
 
 CREATE TABLE user_privilege
@@ -18,8 +18,8 @@ CREATE TABLE user_privilege
     id        UUID PRIMARY KEY,
     user_id   UUID,
     privilege VARCHAR(100),
-    created   TIMESTAMP,
-    updated   TIMESTAMP
+    created   TIMESTAMP WITH TIME ZONE,
+    updated   TIMESTAMP WITH TIME ZONE
 );
 
 CREATE TABLE black_list_tokens
@@ -27,7 +27,7 @@ CREATE TABLE black_list_tokens
     id      UUID PRIMARY KEY,
     user_id UUID    NOT NULL,
     token   VARCHAR NOT NULL,
-    created TIMESTAMP
+    created TIMESTAMP WITH TIME ZONE
 );
 
 

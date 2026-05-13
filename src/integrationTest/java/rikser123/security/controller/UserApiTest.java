@@ -14,6 +14,7 @@ import rikser123.security.dto.request.CreateUserRequestDto;
 import rikser123.security.dto.request.LoginRequestDto;
 import rikser123.security.dto.request.UserDeactivateRequestDto;
 import rikser123.security.dto.response.UserEmailResponse;
+import rikser123.security.repository.RefreshTokenRepository;
 import rikser123.security.repository.UserRepository;
 import rikser123.security.repository.entity.Privilege;
 import rikser123.security.repository.entity.User;
@@ -47,6 +48,9 @@ public class UserApiTest extends BaseConfig {
   @Autowired
   private RefreshTokenService refreshTokenService;
 
+  @Autowired
+  private RefreshTokenRepository refreshTokenRepository;
+
   private static CreateUserRequestDto createValidUser() {
     var dto = new CreateUserRequestDto();
     dto.setLogin("sys11111111111111111111a1aa1121121111121111111112");
@@ -63,6 +67,7 @@ public class UserApiTest extends BaseConfig {
 
   @BeforeEach
   void cleanup() {
+    refreshTokenRepository.deleteAll();
     userRepository.deleteAll();
   }
 
@@ -78,7 +83,6 @@ public class UserApiTest extends BaseConfig {
       .andExpect(jsonPath("$.data.id").isNotEmpty())
       .andExpect(jsonPath("$.data.token").isNotEmpty())
       .andExpect(jsonPath("$.data.refreshToken").isNotEmpty());
-
   }
 
   @Test

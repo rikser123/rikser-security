@@ -6,12 +6,15 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -40,6 +43,7 @@ import rikser123.security.service.SecurityService;
 import rikser123.security.service.UserDetailSecurityService;
 import rikser123.security.service.UserService;
 
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -78,7 +82,15 @@ public class SecurityServiceImpl implements SecurityService {
     var token = jwt.generateToken(savedUser);
     var refreshToken = refreshTokenService.create(user);
 
-    setAuthentication(requestDto.getLogin(), requestDto.getPassword(), token, refreshToken);
+    var authParams = SetAuthenticationParams.builder()
+      .login(requestDto.getLogin())
+      .password(requestDto.getPassword())
+      .token(token)
+      .refreshToken(refreshToken)
+      .privileges(savedUser.getPrivileges())
+      .build();
+
+    setAuthentication(authParams);
 
     var responseDto = new CreateUserResponseDto();
     responseDto.setId(savedUser.getId());
@@ -103,7 +115,16 @@ public class SecurityServiceImpl implements SecurityService {
 
       var token = jwt.generateToken(user);
       var refreshToken = refreshTokenService.create(user);
-      setAuthentication(requestDto.getLogin(), requestDto.getPassword(), token, refreshToken);
+
+      var authParams = SetAuthenticationParams.builder()
+        .login(requestDto.getLogin())
+        .password(requestDto.getPassword())
+        .token(token)
+        .refreshToken(refreshToken)
+        .privileges(user.getPrivileges())
+        .build();
+
+      setAuthentication(authParams);
 
       var responseDto = new LoginResponseDto();
       responseDto.setToken(token);
@@ -161,7 +182,15 @@ public class SecurityServiceImpl implements SecurityService {
         blackListService.addToken(oldTokenContent, savedUser.getId());
       }
 
-      setAuthentication(userDto.getLogin(), userDto.getPassword(), token, refreshToken);
+      var authParams = SetAuthenticationParams.builder()
+        .login(userDto.getLogin())
+        .password(userDto.getPassword())
+        .token(token)
+        .refreshToken(refreshToken)
+        .privileges(savedUser.getPrivileges())
+        .build();
+
+      setAuthentication(authParams);
     }
 
     return RikserResponseUtils.createResponse(responseDto);
@@ -226,16 +255,15 @@ public class SecurityServiceImpl implements SecurityService {
   /**
    * Установка аутентикации в контекст
    *
-   * @param login        логин пользователя
-   * @param password     пароль пользователя
-   * @param token        access_token
-   * @param refreshToken Токен для обновления
+   * @param params {@link SetAuthenticationParams}
    */
-  private void setAuthentication(String login, String password, String token, String refreshToken) {
-    var authToken = new UsernamePasswordAuthenticationToken(login, password);
+  private void setAuthentication(SetAuthenticationParams params) {
+    var authorities = params.getPrivileges().stream().map(privilege -> new SimpleGrantedAuthority(privilege.toString())).toList();
+
+    var authToken = new UsernamePasswordAuthenticationToken(params.getLogin(), params.getPassword(), authorities);
     var tokenDto = new TokenDto();
-    tokenDto.setRefreshToken(refreshToken);
-    tokenDto.setAccessToken(token);
+    tokenDto.setRefreshToken(params.getRefreshToken());
+    tokenDto.setAccessToken(params.getToken());
     authToken.setDetails(tokenDto);
 
     var auth = authenticationManager.authenticate(authToken);
@@ -267,5 +295,16 @@ public class SecurityServiceImpl implements SecurityService {
    */
   private String extractToken(String authToken) {
     return authToken.substring(BEARER_PREFIX.length());
+  }
+
+
+  @Builder
+  @Getter
+  private static class SetAuthenticationParams {
+    private String login;
+    private String password;
+    private String token;
+    private Set<Privilege> privileges;
+    private String refreshToken;
   }
 }

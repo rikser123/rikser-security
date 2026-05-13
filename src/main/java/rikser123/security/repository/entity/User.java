@@ -12,13 +12,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,6 +22,14 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "users")
@@ -69,20 +70,20 @@ public class User implements UserDetails {
   @Column(name = "birth_date", length = 100, nullable = false)
   private LocalDate birthDate;
 
+  @OneToMany(
+    mappedBy = "user",
+    fetch = FetchType.EAGER,
+    orphanRemoval = true,
+    cascade = CascadeType.ALL)
+  private Set<UserPrivilege> userPrivileges = new HashSet<>();
+
   @CreationTimestamp
   @Column(name = "created", updatable = false)
-  private LocalDateTime created;
-
-  @OneToMany(
-      mappedBy = "user",
-      fetch = FetchType.EAGER,
-      orphanRemoval = true,
-      cascade = CascadeType.ALL)
-  private Set<UserPrivilege> userPrivileges = new HashSet<>();
+  private Instant created;
 
   @UpdateTimestamp
   @Column(name = "updated", insertable = false)
-  private LocalDateTime updated;
+  private Instant updated;
 
   public Set<Privilege> getPrivileges() {
     return userPrivileges.stream().map(UserPrivilege::getPrivilege).collect(Collectors.toSet());
@@ -98,8 +99,8 @@ public class User implements UserDetails {
   @JsonIgnore
   public Collection<? extends GrantedAuthority> getAuthorities() {
     return userPrivileges.stream()
-        .map(userPrivilege -> new SimpleGrantedAuthority(userPrivilege.getPrivilege().name()))
-        .toList();
+      .map(userPrivilege -> new SimpleGrantedAuthority(userPrivilege.getPrivilege().name()))
+      .toList();
   }
 
   @Override

@@ -7,8 +7,8 @@ import lombok.NoArgsConstructor;
 import rikser123.security.repository.entity.Privilege;
 import rikser123.security.repository.entity.UserStatus;
 
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 
@@ -48,10 +48,10 @@ public class UserResponseDto {
   private Set<Privilege> privileges;
 
   @Schema(description = "Время создания")
-  private LocalDateTime created;
+  private Instant created;
 
   @Schema(description = "Время обновления")
-  private LocalDateTime updated;
+  private Instant updated;
 
   @Schema(description = "Jwt token")
   private String token;
