@@ -6,10 +6,11 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.NamedAttributeNode;
+import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -38,6 +39,10 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @ToString
+@NamedEntityGraph(
+  name = "privileges",
+  attributeNodes = {@NamedAttributeNode("userPrivileges")}
+)
 public class User implements UserDetails {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
@@ -72,7 +77,6 @@ public class User implements UserDetails {
 
   @OneToMany(
     mappedBy = "user",
-    fetch = FetchType.EAGER,
     orphanRemoval = true,
     cascade = CascadeType.ALL)
   private Set<UserPrivilege> userPrivileges = new HashSet<>();

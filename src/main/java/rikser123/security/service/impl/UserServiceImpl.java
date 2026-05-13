@@ -28,6 +28,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public Optional<User> findUserByEmail(String email) {
     return userRepository.findUserByEmail(email);
   }
@@ -39,6 +40,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public User findById(UUID id) {
     return userRepository
       .findById(id)
