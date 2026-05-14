@@ -1,11 +1,16 @@
 package rikser123.security.service;
 
-import java.util.Optional;
-import java.util.UUID;
+import org.springframework.data.domain.Page;
+import rikser123.security.dto.request.UserFilterDto;
 import rikser123.security.repository.entity.User;
 import rikser123.security.repository.entity.UserStatus;
 
-/** Интерфейс для работы с пользователями */
+import java.util.Optional;
+import java.util.UUID;
+
+/**
+ * Интерфейс для работы с пользователями
+ */
 public interface UserService {
   /**
    * Поиск пользователя по логину
@@ -43,7 +48,7 @@ public interface UserService {
    * Поиск пользователя по логину с отличным id
    *
    * @param login Login пользователя
-   * @param id Id пользователя
+   * @param id    Id пользователя
    * @return Optional пользователя
    */
   Optional<User> findUserByLoginAndIdIsNot(String login, UUID id);
@@ -52,7 +57,7 @@ public interface UserService {
    * Поиск пользователя по email с отличным id
    *
    * @param email Email пользователя
-   * @param id Id пользователя
+   * @param id    Id пользователя
    * @return Optional пользователя
    */
   Optional<User> findUserByEmailAndIdIsNot(String email, UUID id);
@@ -60,9 +65,17 @@ public interface UserService {
   /**
    * Изменение статуса пользователя
    *
-   * @param user {@link User}
+   * @param user   {@link User}
    * @param status {@link UserStatus}
    * @return Пользователь с новым статусом
    */
   User changeStatus(User user, UserStatus status);
+
+  /**
+   * Поиск всех пользователей
+   *
+   * @param filter {@link UserFilterDto}
+   * @return Список пользователей
+   */
+  Page<User> findAll(UserFilterDto filter);
 }

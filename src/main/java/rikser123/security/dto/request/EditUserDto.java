@@ -6,10 +6,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,10 +13,18 @@ import rikser123.bundle.validation.CheckSqlInjection;
 import rikser123.bundle.validation.IsStrongPassword;
 import rikser123.security.repository.entity.Privilege;
 
-/** Запрос на редактирование пользователя */
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * Запрос на редактирование пользователя
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Schema(description = "Параметры редактирования пользоватедя")
 public class EditUserDto {
   @NotNull(message = "Id пользователя должно быть заполнено")
   @Schema(description = "Id пользователя")
@@ -34,21 +38,21 @@ public class EditUserDto {
 
   @NotBlank(message = "Пароль не должен быть пустым")
   @Size(
-      min = 10,
-      max = 100,
-      message = "Пароль должен состоять минимум из 10 символов и максимум из 100")
+    min = 10,
+    max = 100,
+    message = "Пароль должен состоять минимум из 10 символов и максимум из 100")
   @IsStrongPassword(
-      passwordMinLength = 10,
-      message = "Пароль должен содержать латинские символы, цифры и специальные символы")
+    passwordMinLength = 10,
+    message = "Пароль должен содержать латинские символы, цифры и специальные символы")
   @Schema(description = "Пароль пользователя", example = "ssd@@@SSDSflj12")
   @CheckSqlInjection
   private String password;
 
   @NotBlank(message = "Подтверждение пароля не должно быть пустым")
   @Size(
-      min = 10,
-      max = 100,
-      message = "Подтверждение пароля должно состоять минимум из 10 символов и максимум из 100")
+    min = 10,
+    max = 100,
+    message = "Подтверждение пароля должно состоять минимум из 10 символов и максимум из 100")
   @Schema(description = "Подтверждение пароля пользователя", example = "ssd@@@SSDSflj12")
   @CheckSqlInjection
   private String passwordConfirmation;

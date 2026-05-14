@@ -28,11 +28,13 @@ import rikser123.security.dto.request.EditUserDto;
 import rikser123.security.dto.request.LoginRequestDto;
 import rikser123.security.dto.request.UserDeactivateRequestDto;
 import rikser123.security.dto.request.UserEmailRequestDto;
+import rikser123.security.dto.request.UserFilterDto;
 import rikser123.security.dto.response.CreateUserResponseDto;
 import rikser123.security.dto.response.LoginResponseDto;
 import rikser123.security.dto.response.UpdateTokenResponseDto;
 import rikser123.security.dto.response.UserDeactivateResponse;
 import rikser123.security.dto.response.UserEmailResponse;
+import rikser123.security.dto.response.UserFilterResponseDto;
 import rikser123.security.dto.response.UserResponseDto;
 import rikser123.security.mapper.UserMapper;
 import rikser123.security.repository.entity.Privilege;
@@ -249,6 +251,16 @@ public class SecurityServiceImpl implements SecurityService {
     tokenResponseDto.setToken(token);
 
     return RikserResponseUtils.createResponse(tokenResponseDto);
+  }
+
+  @Override
+  public RikserResponseItem<UserFilterResponseDto> findUsers(UserFilterDto filterDto) {
+    var users = userService.findAll(filterDto);
+    var responseDto = new UserFilterResponseDto();
+    responseDto.setTotalElements(users.getTotalElements());
+    responseDto.setUsers(users.get().map(userMapper::mapUserToDto).toList());
+
+    return RikserResponseUtils.createResponse(responseDto);
   }
 
 

@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,11 +25,13 @@ import rikser123.security.dto.request.EditUserDto;
 import rikser123.security.dto.request.LoginRequestDto;
 import rikser123.security.dto.request.UserDeactivateRequestDto;
 import rikser123.security.dto.request.UserEmailRequestDto;
+import rikser123.security.dto.request.UserFilterDto;
 import rikser123.security.dto.response.CreateUserResponseDto;
 import rikser123.security.dto.response.LoginResponseDto;
 import rikser123.security.dto.response.UpdateTokenResponseDto;
 import rikser123.security.dto.response.UserDeactivateResponse;
 import rikser123.security.dto.response.UserEmailResponse;
+import rikser123.security.dto.response.UserFilterResponseDto;
 import rikser123.security.dto.response.UserResponseDto;
 
 import java.util.UUID;
@@ -95,4 +98,9 @@ public interface UserApi {
   RikserResponseItem<UpdateTokenResponseDto> refreshToken(
     @RequestHeader("X-Refresh-Token") String refreshToken
   );
+
+  @GetMapping()
+  @Operation(description = "Получпние списка пользователей")
+  @ResponseStatus(HttpStatus.OK)
+  RikserResponseItem<UserFilterResponseDto> getUsers(@ParameterObject UserFilterDto filterDto);
 }

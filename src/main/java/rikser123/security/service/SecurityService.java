@@ -7,11 +7,13 @@ import rikser123.security.dto.request.EditUserDto;
 import rikser123.security.dto.request.LoginRequestDto;
 import rikser123.security.dto.request.UserDeactivateRequestDto;
 import rikser123.security.dto.request.UserEmailRequestDto;
+import rikser123.security.dto.request.UserFilterDto;
 import rikser123.security.dto.response.CreateUserResponseDto;
 import rikser123.security.dto.response.LoginResponseDto;
 import rikser123.security.dto.response.UpdateTokenResponseDto;
 import rikser123.security.dto.response.UserDeactivateResponse;
 import rikser123.security.dto.response.UserEmailResponse;
+import rikser123.security.dto.response.UserFilterResponseDto;
 import rikser123.security.dto.response.UserResponseDto;
 
 import java.util.UUID;
@@ -85,4 +87,12 @@ public interface SecurityService {
    * @return ответ с новым access токеном
    */
   RikserResponseItem<UpdateTokenResponseDto> updateToken(String refreshToken);
+
+  /**
+   * Поиск списка пользователей по фильтру
+   *
+   * @param filterDto фильтры на поиск
+   * @return Список пользователей
+   */
+  RikserResponseItem<UserFilterResponseDto> findUsers(UserFilterDto filterDto);
 }

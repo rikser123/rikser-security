@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
@@ -19,6 +20,7 @@ import rikser123.security.component.Jwt;
 import rikser123.security.dto.request.LoginRequestDto;
 import rikser123.security.dto.request.UserDeactivateRequestDto;
 import rikser123.security.dto.request.UserEmailRequestDto;
+import rikser123.security.dto.request.UserFilterDto;
 import rikser123.security.mapper.UserMapper;
 import rikser123.security.mapper.UserMapperImpl;
 import rikser123.security.repository.entity.UserStatus;
@@ -26,6 +28,7 @@ import rikser123.security.service.impl.SecurityServiceImpl;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -207,6 +210,17 @@ public class SecurityServiceTest {
     var result = securityService.getUser(user.getId());
 
     assertThat(result.getData().getId()).isEqualTo(user.getId());
+  }
+
+  @Test
+  void getUsers() {
+    var users = List.of(TestData.createUser());
+    var filter = new UserFilterDto();
+
+    when(userService.findAll(any())).thenReturn(new PageImpl<>(users));
+
+    var result = securityService.findUsers(filter);
+    assertThat(result.getData().getUsers().size()).isEqualTo(1);
   }
 
   private static class AuthenticationMock implements Authentication {

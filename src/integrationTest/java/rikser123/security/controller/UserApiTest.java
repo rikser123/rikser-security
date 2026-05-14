@@ -326,6 +326,20 @@ public class UserApiTest extends BaseConfig {
       .andExpect(jsonPath("$.data.token").isNotEmpty());
   }
 
+  @Test
+  void getUsersList() throws Exception {
+    var user = TestData.createUser();
+    var savedUser = userRepository.save(user);
+    var token = generateAuthHeader(savedUser);
+
+    client.perform(get("/api/v1/user")
+        .queryParam("lastName", savedUser.getLastName())
+        .header("Authorization", token))
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("$.result").value(true))
+      .andExpect(jsonPath("$.data.users[0].lastName").value(savedUser.getLastName()));
+  }
+
   private String generateAuthHeader(User user) {
     return "Bearer " + jwt.generateToken(user);
   }

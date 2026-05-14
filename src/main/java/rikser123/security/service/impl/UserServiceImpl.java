@@ -3,13 +3,19 @@ package rikser123.security.service.impl;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import rikser123.bundle.exception.StatusChangeException;
 import rikser123.bundle.service.StatusMatrix;
+import rikser123.security.dto.request.UserFilterDto;
 import rikser123.security.repository.UserRepository;
 import rikser123.security.repository.entity.User;
 import rikser123.security.repository.entity.UserStatus;
+import rikser123.security.repository.spec.UserFilterSpecification;
 import rikser123.security.service.UserService;
 
 import java.util.Optional;
@@ -73,5 +79,23 @@ public class UserServiceImpl implements UserService {
     user.setStatus(status);
     userRepository.save(user);
     return user;
+  }
+
+  @Override
+  public Page<User> findAll(UserFilterDto filter) {
+    var specification = new UserFilterSpecification(filter);
+
+    log.warn("filter {}", filter);
+
+    var sort = Sort.unsorted();
+
+    if (StringUtils.isNotEmpty(filter.getSortField())) {
+      var direction = Optional.ofNullable(filter.getDirection()).orElse(Sort.Direction.ASC);
+      sort = Sort.by(direction, filter.getSortField());
+    }
+
+    var pageRequest = PageRequest.of(filter.getPageNumber(), filter.getPageSize(), sort);
+
+    return userRepository.findAll(specification, pageRequest);
   }
 }
