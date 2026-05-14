@@ -36,9 +36,9 @@ jwt:
 
 springdoc:
   api-docs:
-    enabled: false
+    enabled: true
   swagger-ui:
-    enabled: false
+    enabled: true
 
 scheduler:
   clear-black-list:
@@ -62,3 +62,10 @@ management:
       status:
         http-mapping:
           down: 503
+
+
+logging:
+  level:
+    org:
+      springframework:
+        security=DEBUG:
