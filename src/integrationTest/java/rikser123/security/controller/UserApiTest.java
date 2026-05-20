@@ -1,9 +1,12 @@
 package rikser123.security.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import rikser123.security.BaseConfig;
@@ -21,7 +24,9 @@ import rikser123.security.repository.entity.User;
 import rikser123.security.service.RefreshTokenService;
 
 import java.time.LocalDate;
+import java.util.Base64;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -50,6 +55,9 @@ public class UserApiTest extends BaseConfig {
 
   @Autowired
   private RefreshTokenRepository refreshTokenRepository;
+
+  @Value("${jwt.secret}")
+  private String secret;
 
   private static CreateUserRequestDto createValidUser() {
     var dto = new CreateUserRequestDto();
@@ -338,6 +346,41 @@ public class UserApiTest extends BaseConfig {
       .andExpect(status().isOk())
       .andExpect(jsonPath("$.result").value(true))
       .andExpect(jsonPath("$.data.users[0].lastName").value(savedUser.getLastName()));
+  }
+
+  @Test
+  void updateTokenThenOutdated() throws Exception {
+    var user = TestData.createUser();
+    var savedUser = userRepository.save(user);
+    var token = generateOutdatedToken(savedUser);
+    var refreshToken = refreshTokenService.create(user);
+
+    client.perform(get("/api/v1/user/get/" + savedUser.getId())
+        .header("Authorization", "Bearer " + token))
+      .andExpect(status().isBadRequest())
+      .andExpect(jsonPath("$.result").value(false));
+
+    client.perform(get("/api/v1/user/get/" + savedUser.getId())
+        .header("X-Refresh-Token", refreshToken)
+        .header("Authorization", "Bearer " + token))
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("$.result").value(true))
+      .andExpect(jsonPath("$.data.id").isNotEmpty());
+  }
+
+  private String generateOutdatedToken(User user) {
+    var encoder = Base64.getEncoder();
+    var encodedSecret = encoder.encode(secret.getBytes());
+
+    return Jwts.builder()
+      .subject(user.getLogin())
+      .claim("id", user.getId())
+      .claim("email", user.getEmail())
+      .claim("status", user.getStatus())
+      .issuedAt(new Date())
+      .expiration(new Date(System.currentTimeMillis() + 1))
+      .signWith(SignatureAlgorithm.HS256, encodedSecret)
+      .compact();
   }
 
   private String generateAuthHeader(User user) {
