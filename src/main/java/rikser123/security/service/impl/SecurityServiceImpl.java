@@ -31,6 +31,7 @@ import rikser123.security.dto.request.UserEmailRequestDto;
 import rikser123.security.dto.request.UserFilterDto;
 import rikser123.security.dto.response.CreateUserResponseDto;
 import rikser123.security.dto.response.LoginResponseDto;
+import rikser123.security.dto.response.PublicKeyResponseDto;
 import rikser123.security.dto.response.UpdateTokenResponseDto;
 import rikser123.security.dto.response.UserDeactivateResponse;
 import rikser123.security.dto.response.UserEmailResponse;
@@ -153,20 +154,20 @@ public class SecurityServiceImpl implements SecurityService {
 
     var updatedUser = userService.findById(userDto.getId());
     var oldLogin = updatedUser.getLogin();
-    userMapper.updateUser(userDto, updatedUser);
 
-    var existedWithSameLogin = userService.findUserByLoginAndIdIsNot(updatedUser.getLogin(), updatedUser.getId());
+    var existedWithSameLogin = userService.findUserByLoginAndIdIsNot(userDto.getLogin(), updatedUser.getId());
     if (existedWithSameLogin.isPresent()) {
       throw new EntityExistsException(
-        String.format("Пользователь с логином %s уже зарегистрирован", updatedUser.getLogin()));
+        String.format("Пользователь с логином %s уже зарегистрирован", userDto.getLogin()));
     }
 
-    var existedWithSameEmail = userService.findUserByEmailAndIdIsNot(updatedUser.getEmail(), updatedUser.getId());
+    var existedWithSameEmail = userService.findUserByEmailAndIdIsNot(userDto.getEmail(), updatedUser.getId());
     if (existedWithSameEmail.isPresent()) {
       throw new EntityExistsException(
-        String.format("Пользователь с email %s уже зарегистрирован", updatedUser.getEmail()));
+        String.format("Пользователь с email %s уже зарегистрирован", userDto.getEmail()));
     }
 
+    userMapper.updateUser(userDto, updatedUser);
     var savedUser = userService.save(updatedUser);
 
     var responseDto = userMapper.mapUserToDto(savedUser);
@@ -261,6 +262,14 @@ public class SecurityServiceImpl implements SecurityService {
     responseDto.setUsers(users.get().map(userMapper::mapUserToDto).toList());
 
     return RikserResponseUtils.createResponse(responseDto);
+  }
+
+  @Override
+  public RikserResponseItem<PublicKeyResponseDto> getPublicKey() {
+    var response = new PublicKeyResponseDto();
+    response.setPublicKey(jwt.getPublicKey());
+
+    return RikserResponseUtils.createResponse(response);
   }
 
 

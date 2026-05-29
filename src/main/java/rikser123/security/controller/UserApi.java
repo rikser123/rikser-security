@@ -28,6 +28,7 @@ import rikser123.security.dto.request.UserEmailRequestDto;
 import rikser123.security.dto.request.UserFilterDto;
 import rikser123.security.dto.response.CreateUserResponseDto;
 import rikser123.security.dto.response.LoginResponseDto;
+import rikser123.security.dto.response.PublicKeyResponseDto;
 import rikser123.security.dto.response.UpdateTokenResponseDto;
 import rikser123.security.dto.response.UserDeactivateResponse;
 import rikser123.security.dto.response.UserEmailResponse;
@@ -100,7 +101,12 @@ public interface UserApi {
   );
 
   @GetMapping()
-  @Operation(description = "Получпние списка пользователей")
+  @Operation(description = "Получение списка пользователей")
   @ResponseStatus(HttpStatus.OK)
   RikserResponseItem<UserFilterResponseDto> getUsers(@ParameterObject UserFilterDto filterDto);
+
+  @GetMapping("/public-key")
+  @Operation(description = "Получение публичного ключа")
+  @ResponseStatus(HttpStatus.OK)
+  RikserResponseItem<PublicKeyResponseDto> getPublicKey();
 }

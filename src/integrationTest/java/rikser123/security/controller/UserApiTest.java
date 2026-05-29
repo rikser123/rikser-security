@@ -23,6 +23,8 @@ import rikser123.security.repository.entity.Privilege;
 import rikser123.security.repository.entity.User;
 import rikser123.security.service.RefreshTokenService;
 
+import java.security.KeyFactory;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.LocalDate;
 import java.util.Base64;
 import java.util.Collections;
@@ -56,8 +58,8 @@ public class UserApiTest extends BaseConfig {
   @Autowired
   private RefreshTokenRepository refreshTokenRepository;
 
-  @Value("${jwt.secret}")
-  private String secret;
+  @Value("${jwt.privateKey}")
+  private String privateKey;
 
   private static CreateUserRequestDto createValidUser() {
     var dto = new CreateUserRequestDto();
@@ -266,7 +268,7 @@ public class UserApiTest extends BaseConfig {
         .content(objectMapper.writeValueAsString(IntegrationUtils.buildRequest(dto))))
       .andExpect(status().isOk())
       .andExpect(jsonPath("$.result").value(true))
-      .andExpect(jsonPath("$.data.id").value(dto.getId()));
+      .andExpect(jsonPath("$.data.id").value(dto.getId().toString()));
   }
 
   @Test
@@ -283,7 +285,7 @@ public class UserApiTest extends BaseConfig {
         .content(objectMapper.writeValueAsString(IntegrationUtils.buildRequest(dto))))
       .andExpect(status().isOk())
       .andExpect(jsonPath("$.result").value(true))
-      .andExpect(jsonPath("$.data.id").value(dto.getId()));
+      .andExpect(jsonPath("$.data.id").value(dto.getId().toString()));
   }
 
   @Test
@@ -296,7 +298,7 @@ public class UserApiTest extends BaseConfig {
         .header("Authorization", token))
       .andExpect(status().isOk())
       .andExpect(jsonPath("$.result").value(true))
-      .andExpect(jsonPath("$.data.id").value(savedUser.getId()));
+      .andExpect(jsonPath("$.data.id").value(savedUser.getId().toString()));
   }
 
   @Test
@@ -368,9 +370,18 @@ public class UserApiTest extends BaseConfig {
       .andExpect(jsonPath("$.data.id").isNotEmpty());
   }
 
-  private String generateOutdatedToken(User user) {
-    var encoder = Base64.getEncoder();
-    var encodedSecret = encoder.encode(secret.getBytes());
+  private String generateOutdatedToken(User user) throws Exception {
+    var privatePKeyParsed = new String(Base64.getDecoder().decode(privateKey));
+
+    var privateKeyContent = privatePKeyParsed
+      .replace("-----BEGIN PRIVATE KEY-----", "")
+      .replace("-----END PRIVATE KEY-----", "")
+      .replaceAll("\\s", "");
+
+    var decoded = Base64.getDecoder().decode(privateKeyContent);
+    var keySpec = new PKCS8EncodedKeySpec(decoded);
+    var keyFactory = KeyFactory.getInstance("RSA");
+    var key = keyFactory.generatePrivate(keySpec);
 
     return Jwts.builder()
       .subject(user.getLogin())
@@ -379,7 +390,7 @@ public class UserApiTest extends BaseConfig {
       .claim("status", user.getStatus())
       .issuedAt(new Date())
       .expiration(new Date(System.currentTimeMillis() + 1))
-      .signWith(SignatureAlgorithm.HS256, encodedSecret)
+      .signWith(key, SignatureAlgorithm.RS256)
       .compact();
   }
 

@@ -21,6 +21,7 @@ import rikser123.security.dto.request.UserEmailRequestDto;
 import rikser123.security.dto.request.UserFilterDto;
 import rikser123.security.dto.response.CreateUserResponseDto;
 import rikser123.security.dto.response.LoginResponseDto;
+import rikser123.security.dto.response.PublicKeyResponseDto;
 import rikser123.security.dto.response.UpdateTokenResponseDto;
 import rikser123.security.dto.response.UserDeactivateResponse;
 import rikser123.security.dto.response.UserEmailResponse;
@@ -92,5 +93,10 @@ public class UserController implements UserApi {
   @Override
   public RikserResponseItem<UserFilterResponseDto> getUsers(UserFilterDto filterDto) {
     return securityService.findUsers(filterDto);
+  }
+
+  @Override
+  public RikserResponseItem<PublicKeyResponseDto> getPublicKey() {
+    return securityService.getPublicKey();
   }
 }

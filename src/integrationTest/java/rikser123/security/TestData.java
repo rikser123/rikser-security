@@ -1,12 +1,13 @@
 package rikser123.security;
 
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Set;
 import rikser123.security.dto.request.EditUserDto;
 import rikser123.security.repository.entity.Privilege;
 import rikser123.security.repository.entity.User;
 import rikser123.security.repository.entity.UserPrivilege;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Set;
 
 public class TestData {
   public static User createUser() {
