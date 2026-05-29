@@ -22,6 +22,8 @@ RUN ./gradlew bootJar --no-daemon -x test
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
+RUN apk add --no-cache curl
+
 RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
 

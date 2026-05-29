@@ -21,3 +21,10 @@ springdoc:
     enabled: false
   swagger-ui:
     enabled: false
+
+bundle:
+  security:
+    enabled: true
+    service:
+      enabled: false
+      url: http://localhost:8081
