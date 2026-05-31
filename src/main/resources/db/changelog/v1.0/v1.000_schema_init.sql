@@ -41,3 +41,26 @@ CREATE TABLE refresh_token
     created    TIMESTAMP WITH TIME ZONE,
     updated    TIMESTAMP WITH TIME ZONE
 );
+
+INSERT INTO users (id,
+                   login,
+                   password,
+                   email,
+                   first_name,
+                   middle_name,
+                   last_name,
+                   birth_date,
+                   status,
+                   created,
+                   updated)
+VALUES ('458d0244-98ff-4c8a-b2ba-5e6f8440e37b',
+        'Kafka123',
+        '$2a$10$wy1Hsyd2Ld7ZaMfSz46stexFPT5XkFa6Z0GKbOOPpfqyQdrhlsDKi',
+        'kafka@rar.ru',
+        'kafka',
+        'kafka',
+        'kafka',
+        '1990-02-08',
+        'REGISTERED',
+        NOW(),
+        NOW());
