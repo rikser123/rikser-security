@@ -85,8 +85,6 @@ public class UserServiceImpl implements UserService {
   public Page<User> findAll(UserFilterDto filter) {
     var specification = new UserFilterSpecification(filter);
 
-    log.warn("filter {}", filter);
-
     var sort = Sort.unsorted();
 
     if (StringUtils.isNotEmpty(filter.getSortField())) {

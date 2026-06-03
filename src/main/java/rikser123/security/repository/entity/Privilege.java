@@ -5,6 +5,7 @@ public enum Privilege {
   USER_DELETE,
   USER_VIEW,
   CREATE_REQUEST,
+  VIEW_REQUEST,
   CHECK_SPELLS,
   KAFKA_VIEW,
   KAFKA_SEND
