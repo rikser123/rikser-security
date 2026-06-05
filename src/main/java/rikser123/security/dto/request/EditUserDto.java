@@ -88,4 +88,7 @@ public class EditUserDto {
   @NotEmpty
   @Schema(description = "Список привилегий пользователя", example = "[EDIT, CREATE]")
   private List<Privilege> privileges = new ArrayList<>();
+
+  @Schema(description = "Id тарифа")
+  private UUID tarifId;
 }

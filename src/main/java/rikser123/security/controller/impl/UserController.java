@@ -27,6 +27,7 @@ import rikser123.security.dto.response.UserDeactivateResponse;
 import rikser123.security.dto.response.UserEmailResponse;
 import rikser123.security.dto.response.UserFilterResponseDto;
 import rikser123.security.dto.response.UserResponseDto;
+import rikser123.security.dto.response.UserResponseDtoTarif;
 import rikser123.security.service.SecurityService;
 
 import java.util.UUID;
@@ -98,5 +99,10 @@ public class UserController implements UserApi {
   @Override
   public RikserResponseItem<PublicKeyResponseDto> getPublicKey() {
     return securityService.getPublicKey();
+  }
+
+  @Override
+  public RikserResponseItem<UserResponseDtoTarif> getUserWithTarif(@PathVariable UUID id) {
+    return securityService.getUserWithTarif(id);
   }
 }

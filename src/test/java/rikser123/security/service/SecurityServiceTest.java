@@ -46,18 +46,27 @@ public class SecurityServiceTest {
   RefreshTokenService refreshTokenService;
   private SecurityService securityService;
   private UserMapper userMapper;
+
   @Mock
   private Jwt jwt;
   @Mock
+
   private AuthenticationManager authenticationManager;
   @Mock
+
   private UserDetailSecurityService userDetailService;
   @Mock
+
   private UserService userService;
   @Mock
+
   private PasswordEncoder passwordEncoder;
+
   @Mock
   private BlackListService blackListService;
+
+  private TarifService tarifService;
+
 
   @BeforeEach
   void init() {
@@ -73,7 +82,8 @@ public class SecurityServiceTest {
       passwordEncoder,
       blackListService,
       new ObjectMapper(),
-      refreshTokenService
+      refreshTokenService,
+      tarifService
     );
 
     SecurityContextHolder.clearContext();

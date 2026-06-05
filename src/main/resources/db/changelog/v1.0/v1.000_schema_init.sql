@@ -42,6 +42,33 @@ CREATE TABLE refresh_token
     updated    TIMESTAMP WITH TIME ZONE
 );
 
+CREATE TABLE tarifs
+(
+    id              UUID PRIMARY KEY,
+    name            VARCHAR(100) NOT NULL,
+    description     VARCHAR(1000),
+    request_per_day INTEGER      NOT NULL,
+    created         TIMESTAMP WITH TIME ZONE,
+    updated         TIMESTAMP WITH TIME ZONE
+);
+
+CREATE TABLE user_tarif
+(
+    id       UUID PRIMARY KEY,
+    user_id  UUID,
+    tarif_id UUID         NOT NULL,
+    status   VARCHAR(100) NOT NULL,
+    created  TIMESTAMP WITH TIME ZONE,
+    updated  TIMESTAMP WITH TIME ZONE
+);
+
+INSERT INTO tarifs (id, name, description, request_per_day, created)
+VALUES ('550e8400-e29b-41d4-a716-446655440000',
+        'Базовый',
+        'Базовый тариф для новых пользователей. До 50 запросов в день.',
+        50,
+        CURRENT_TIMESTAMP);
+
 INSERT INTO users (id,
                    login,
                    password,

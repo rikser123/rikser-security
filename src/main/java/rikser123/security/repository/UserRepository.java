@@ -20,5 +20,8 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
 
   Optional<User> findUserByLoginAndIdIsNot(String login, UUID id);
 
-  Optional findUserByEmailAndIdIsNot(String email, UUID id);
+  Optional<User> findUserByEmailAndIdIsNot(String email, UUID id);
+
+  @EntityGraph("tarifs")
+  Optional<User> findWithTarifsById(UUID id);
 }

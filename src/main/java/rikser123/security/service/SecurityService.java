@@ -16,6 +16,7 @@ import rikser123.security.dto.response.UserDeactivateResponse;
 import rikser123.security.dto.response.UserEmailResponse;
 import rikser123.security.dto.response.UserFilterResponseDto;
 import rikser123.security.dto.response.UserResponseDto;
+import rikser123.security.dto.response.UserResponseDtoTarif;
 
 import java.util.UUID;
 
@@ -103,4 +104,12 @@ public interface SecurityService {
    * @return Публичный ключ pem
    */
   RikserResponseItem<PublicKeyResponseDto> getPublicKey();
+
+  /**
+   * Возвращают дто пользователя с тарифом
+   *
+   * @param userId id пользователя
+   * @return Дто пользователя
+   */
+  RikserResponseItem<UserResponseDtoTarif> getUserWithTarif(UUID userId);
 }

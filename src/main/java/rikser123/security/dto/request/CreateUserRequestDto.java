@@ -6,9 +6,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,14 +14,21 @@ import rikser123.bundle.validation.IsEqual;
 import rikser123.bundle.validation.IsStrongPassword;
 import rikser123.security.repository.entity.Privilege;
 
-/** Запрос на создание пользователя */
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * Запрос на создание пользователя
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
 @IsEqual(
-    firstField = "password",
-    secondField = "passwordConfirmation",
-    message = "Подтверждение пароля не равно паролю")
+  firstField = "password",
+  secondField = "passwordConfirmation",
+  message = "Подтверждение пароля не равно паролю")
 @Schema(description = "Параметры для регистрации пользователя")
 public class CreateUserRequestDto {
   @NotBlank(message = "Логин не должен быть пустым")
@@ -35,21 +39,21 @@ public class CreateUserRequestDto {
 
   @NotBlank(message = "Пароль не должен быть пустым")
   @Size(
-      min = 10,
-      max = 100,
-      message = "Пароль должен состоять минимум из 10 символов и максимум из 100")
+    min = 10,
+    max = 100,
+    message = "Пароль должен состоять минимум из 10 символов и максимум из 100")
   @IsStrongPassword(
-      passwordMinLength = 10,
-      message = "Пароль должен содержать латинские символы, цифры и специальные символы")
+    passwordMinLength = 10,
+    message = "Пароль должен содержать латинские символы, цифры и специальные символы")
   @Schema(description = "Пароль пользователя", example = "ssd@@@SSDSflj12")
   @CheckSqlInjection
   private String password;
 
   @NotBlank(message = "Подтверждение пароля не должно быть пустым")
   @Size(
-      min = 10,
-      max = 100,
-      message = "Подтверждение пароля должно состоять минимум из 10 символов и максимум из 100")
+    min = 10,
+    max = 100,
+    message = "Подтверждение пароля должно состоять минимум из 10 символов и максимум из 100")
   @Schema(description = "Подтверждение пароля пользователя", example = "ssd@@@SSDSflj12")
   @CheckSqlInjection
   private String passwordConfirmation;
@@ -85,4 +89,7 @@ public class CreateUserRequestDto {
   @NotEmpty(message = "Privileges не должно быть пустым")
   @Schema(description = "Список привилегий пользователя", example = "[EDIT, CREATE]")
   private List<Privilege> privileges = new ArrayList<>();
+
+  @Schema(description = "Id тарифа")
+  private UUID tarifId;
 }

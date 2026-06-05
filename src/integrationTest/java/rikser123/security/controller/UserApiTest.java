@@ -19,9 +19,13 @@ import rikser123.security.dto.request.UserDeactivateRequestDto;
 import rikser123.security.dto.response.UserEmailResponse;
 import rikser123.security.repository.RefreshTokenRepository;
 import rikser123.security.repository.UserRepository;
+import rikser123.security.repository.UserTarifRepository;
 import rikser123.security.repository.entity.Privilege;
+import rikser123.security.repository.entity.TarifStatus;
 import rikser123.security.repository.entity.User;
+import rikser123.security.repository.entity.UserTarif;
 import rikser123.security.service.RefreshTokenService;
+import rikser123.security.utils.AppConstants;
 
 import java.security.KeyFactory;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -31,6 +35,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -58,6 +63,9 @@ public class UserApiTest extends BaseConfig {
   @Autowired
   private RefreshTokenRepository refreshTokenRepository;
 
+  @Autowired
+  private UserTarifRepository userTarifRepository;
+
   @Value("${jwt.privateKey}")
   private String privateKey;
 
@@ -77,8 +85,9 @@ public class UserApiTest extends BaseConfig {
 
   @BeforeEach
   void cleanup() {
-    refreshTokenRepository.deleteAll();
-    userRepository.deleteAll();
+    refreshTokenRepository.deleteAllInBatch();
+    userRepository.deleteAllInBatch();
+    userTarifRepository.deleteAllInBatch();
   }
 
   @Test
@@ -93,6 +102,24 @@ public class UserApiTest extends BaseConfig {
       .andExpect(jsonPath("$.data.id").isNotEmpty())
       .andExpect(jsonPath("$.data.token").isNotEmpty())
       .andExpect(jsonPath("$.data.refreshToken").isNotEmpty());
+  }
+
+  @Test
+  void registerWithTarif() throws Exception {
+    var dto = createValidUser();
+    dto.setTarifId(AppConstants.BASE_TARIF_ID);
+
+    client.perform(post("/api/v1/user/register")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(IntegrationUtils.buildRequest(dto))))
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("$.result").value(true))
+      .andExpect(jsonPath("$.data.id").isNotEmpty())
+      .andExpect(jsonPath("$.data.token").isNotEmpty())
+      .andExpect(jsonPath("$.data.refreshToken").isNotEmpty());
+
+    var userTarifs = userTarifRepository.findAll();
+    assertThat(userTarifs.getFirst().getTarifId()).isEqualTo(AppConstants.BASE_TARIF_ID);
   }
 
   @Test
@@ -368,6 +395,26 @@ public class UserApiTest extends BaseConfig {
       .andExpect(status().isOk())
       .andExpect(jsonPath("$.result").value(true))
       .andExpect(jsonPath("$.data.id").isNotEmpty());
+  }
+
+  @Test
+  void getUserWithTarif() throws Exception {
+    var user = TestData.createUser();
+    var tarif = new UserTarif();
+    tarif.setTarifId(AppConstants.BASE_TARIF_ID);
+    tarif.setUser(user);
+    tarif.setStatus(TarifStatus.ACTIVE);
+    user.getTarifs().add(tarif);
+
+    var savedUser = userRepository.save(user);
+    var token = generateAuthHeader(savedUser);
+
+    client.perform(get("/api/v1/user/get/" + savedUser.getId() + "/tarif")
+        .header("Authorization", token))
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("$.result").value(true))
+      .andExpect(jsonPath("$.data.id").value(savedUser.getId().toString()))
+      .andExpect(jsonPath("$.data.tarif.requestPerDay").value(50));
   }
 
   private String generateOutdatedToken(User user) throws Exception {

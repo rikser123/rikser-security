@@ -96,4 +96,11 @@ public class UserServiceImpl implements UserService {
 
     return userRepository.findAll(specification, pageRequest);
   }
+
+  @Transactional(readOnly = true)
+  @Override
+  public User findByIdWithTarifs(UUID id) {
+    return userRepository.findWithTarifsById(id)
+      .orElseThrow(() -> new EntityNotFoundException(String.format("Пользователь с id %s не найден", id)));
+  }
 }

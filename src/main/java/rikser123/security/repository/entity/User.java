@@ -6,6 +6,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -28,6 +29,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -42,6 +44,10 @@ import java.util.stream.Collectors;
 @NamedEntityGraph(
   name = "privileges",
   attributeNodes = {@NamedAttributeNode("userPrivileges")}
+)
+@NamedEntityGraph(
+  name = "tarifs",
+  attributeNodes = {@NamedAttributeNode("userPrivileges"), @NamedAttributeNode("tarifs")}
 )
 public class User implements UserDetails {
   @Id
@@ -81,13 +87,23 @@ public class User implements UserDetails {
     cascade = CascadeType.ALL)
   private Set<UserPrivilege> userPrivileges = new HashSet<>();
 
+  @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+  private Set<UserTarif> tarifs = new HashSet<>();
+
   @CreationTimestamp
   @Column(name = "created", updatable = false)
   private Instant created;
-
   @UpdateTimestamp
+
   @Column(name = "updated", insertable = false)
   private Instant updated;
+
+  public Optional<UserTarif> getActiveTarif() {
+    return tarifs.
+      stream()
+      .filter(tarif -> tarif.getStatus() == TarifStatus.ACTIVE)
+      .findFirst();
+  }
 
   public Set<Privilege> getPrivileges() {
     return userPrivileges.stream().map(UserPrivilege::getPrivilege).collect(Collectors.toSet());

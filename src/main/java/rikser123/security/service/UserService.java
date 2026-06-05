@@ -78,4 +78,12 @@ public interface UserService {
    * @return Список пользователей
    */
   Page<User> findAll(UserFilterDto filter);
+
+  /**
+   * Поиск пользователя с тарифом
+   *
+   * @param id Id пользователя
+   * @return Пользователь с тарифами
+   */
+  User findByIdWithTarifs(UUID id);
 }

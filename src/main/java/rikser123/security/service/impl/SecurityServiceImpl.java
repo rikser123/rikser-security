@@ -37,15 +37,18 @@ import rikser123.security.dto.response.UserDeactivateResponse;
 import rikser123.security.dto.response.UserEmailResponse;
 import rikser123.security.dto.response.UserFilterResponseDto;
 import rikser123.security.dto.response.UserResponseDto;
+import rikser123.security.dto.response.UserResponseDtoTarif;
 import rikser123.security.mapper.UserMapper;
 import rikser123.security.repository.entity.Privilege;
 import rikser123.security.repository.entity.UserStatus;
 import rikser123.security.service.BlackListService;
 import rikser123.security.service.RefreshTokenService;
 import rikser123.security.service.SecurityService;
+import rikser123.security.service.TarifService;
 import rikser123.security.service.UserDetailSecurityService;
 import rikser123.security.service.UserService;
 
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -64,6 +67,7 @@ public class SecurityServiceImpl implements SecurityService {
   private final BlackListService blackListService;
   private final ObjectMapper objectMapper;
   private final RefreshTokenService refreshTokenService;
+  private final TarifService tarifService;
 
   @Override
   @Transactional
@@ -81,6 +85,9 @@ public class SecurityServiceImpl implements SecurityService {
     }
 
     var user = userMapper.mapUser(requestDto);
+    if (!Objects.isNull(requestDto.getTarifId())) {
+      user = tarifService.updateTarif(user, requestDto.getTarifId());
+    }
     var savedUser = userService.save(user);
     var token = jwt.generateToken(savedUser);
     var refreshToken = refreshTokenService.create(user);
@@ -152,7 +159,7 @@ public class SecurityServiceImpl implements SecurityService {
   public RikserResponseItem<UserResponseDto> editUser(EditUserDto userDto, String oldToken) {
     checkAccess(userDto.getId(), Privilege.USER_EDIT);
 
-    var updatedUser = userService.findById(userDto.getId());
+    var updatedUser = userService.findByIdWithTarifs(userDto.getId());
     var oldLogin = updatedUser.getLogin();
 
     var existedWithSameLogin = userService.findUserByLoginAndIdIsNot(userDto.getLogin(), updatedUser.getId());
@@ -168,6 +175,9 @@ public class SecurityServiceImpl implements SecurityService {
     }
 
     userMapper.updateUser(userDto, updatedUser);
+    if (!Objects.isNull(userDto.getTarifId())) {
+      updatedUser = tarifService.updateTarif(updatedUser, userDto.getTarifId());
+    }
     var savedUser = userService.save(updatedUser);
 
     var responseDto = userMapper.mapUserToDto(savedUser);
@@ -272,6 +282,17 @@ public class SecurityServiceImpl implements SecurityService {
     return RikserResponseUtils.createResponse(response);
   }
 
+  @Override
+  public RikserResponseItem<UserResponseDtoTarif> getUserWithTarif(UUID userId) {
+    checkAccess(userId, Privilege.USER_VIEW);
+    var currentUser = userService.findByIdWithTarifs(userId);
+    var tarifDto = tarifService.getUserTarif(currentUser);
+    var userDto = userMapper.mapToDtoTarif(currentUser);
+    userDto.setTarif(tarifDto);
+
+    return RikserResponseUtils.createResponse(userDto);
+  }
+
 
   /**
    * Установка аутентикации в контекст
@@ -317,7 +338,6 @@ public class SecurityServiceImpl implements SecurityService {
   private String extractToken(String authToken) {
     return authToken.substring(BEARER_PREFIX.length());
   }
-
 
   @Builder
   @Getter

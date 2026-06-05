@@ -34,6 +34,7 @@ import rikser123.security.dto.response.UserDeactivateResponse;
 import rikser123.security.dto.response.UserEmailResponse;
 import rikser123.security.dto.response.UserFilterResponseDto;
 import rikser123.security.dto.response.UserResponseDto;
+import rikser123.security.dto.response.UserResponseDtoTarif;
 
 import java.util.UUID;
 
@@ -109,4 +110,9 @@ public interface UserApi {
   @Operation(description = "Получение публичного ключа")
   @ResponseStatus(HttpStatus.OK)
   RikserResponseItem<PublicKeyResponseDto> getPublicKey();
+
+  @GetMapping("/get/{id}/tarif")
+  @Operation(description = "Получпние пользователя по айди c тарифом")
+  @ResponseStatus(HttpStatus.OK)
+  RikserResponseItem<UserResponseDtoTarif> getUserWithTarif(@PathVariable UUID id);
 }

@@ -1,6 +1,5 @@
 package rikser123.security.mapper;
 
-import java.util.stream.Collectors;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.mapstruct.AfterMapping;
@@ -12,8 +11,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import rikser123.security.dto.request.CreateUserRequestDto;
 import rikser123.security.dto.request.EditUserDto;
 import rikser123.security.dto.response.UserResponseDto;
+import rikser123.security.dto.response.UserResponseDtoTarif;
 import rikser123.security.repository.entity.User;
 import rikser123.security.repository.entity.UserPrivilege;
+
+import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring")
 @Slf4j
@@ -28,6 +30,8 @@ public abstract class UserMapper {
 
   public abstract UserResponseDto mapUserToDto(User user);
 
+  public abstract UserResponseDtoTarif mapToDtoTarif(User user);
+
   public abstract void updateUser(EditUserDto editUserDto, @MappingTarget User user);
 
   @AfterMapping
@@ -35,15 +39,15 @@ public abstract class UserMapper {
     setEncodedPassword(user);
 
     var privileges =
-        dto.getPrivileges().stream()
-            .map(
-                privilege -> {
-                  var userPrivilege = new UserPrivilege();
-                  userPrivilege.setPrivilege(privilege);
-                  userPrivilege.setUser(user);
-                  return userPrivilege;
-                })
-            .collect(Collectors.toSet());
+      dto.getPrivileges().stream()
+        .map(
+          privilege -> {
+            var userPrivilege = new UserPrivilege();
+            userPrivilege.setPrivilege(privilege);
+            userPrivilege.setUser(user);
+            return userPrivilege;
+          })
+        .collect(Collectors.toSet());
 
     user.setUserPrivileges(privileges);
   }
@@ -55,32 +59,32 @@ public abstract class UserMapper {
     var userPrivileges = user.getUserPrivileges();
 
     var newPrivileges =
-        dtoPrivileges.stream()
-            .filter(privilege -> !currentPrivileges.contains(privilege))
-            .collect(Collectors.toSet());
+      dtoPrivileges.stream()
+        .filter(privilege -> !currentPrivileges.contains(privilege))
+        .collect(Collectors.toSet());
     var deletedPrivileges =
-        currentPrivileges.stream()
-            .filter(privilege -> !dtoPrivileges.contains(privilege))
-            .collect(Collectors.toSet());
+      currentPrivileges.stream()
+        .filter(privilege -> !dtoPrivileges.contains(privilege))
+        .collect(Collectors.toSet());
 
     var deletedUserPrivileges =
-        userPrivileges.stream()
-            .filter(userPrivilege -> deletedPrivileges.contains(userPrivilege.getPrivilege()))
-            .collect(Collectors.toSet());
+      userPrivileges.stream()
+        .filter(userPrivilege -> deletedPrivileges.contains(userPrivilege.getPrivilege()))
+        .collect(Collectors.toSet());
 
     deletedUserPrivileges.forEach(
-        userPrivilege -> {
-          userPrivileges.remove(userPrivilege);
-          userPrivilege.setUser(null);
-        });
+      userPrivilege -> {
+        userPrivileges.remove(userPrivilege);
+        userPrivilege.setUser(null);
+      });
 
     newPrivileges.forEach(
-        privilege -> {
-          var userPrivilege = new UserPrivilege();
-          userPrivilege.setUser(user);
-          userPrivilege.setPrivilege(privilege);
-          userPrivileges.add(userPrivilege);
-        });
+      privilege -> {
+        var userPrivilege = new UserPrivilege();
+        userPrivilege.setUser(user);
+        userPrivilege.setPrivilege(privilege);
+        userPrivileges.add(userPrivilege);
+      });
 
     setEncodedPassword(user);
   }
