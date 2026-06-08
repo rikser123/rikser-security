@@ -65,9 +65,7 @@ management:
         http-mapping:
           down: 503
 
-
-logging:
-  level:
-    org:
-      springframework:
-        security=DEBUG:
+logbook:
+  predicate:
+    exclude:
+      - path: /api/v1/user/public-key
