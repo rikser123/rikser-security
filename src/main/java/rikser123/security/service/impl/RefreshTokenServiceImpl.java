@@ -24,7 +24,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
   private final RefreshTokenRepository refreshTokenRepository;
   private final Jwt jwt;
 
-  @Value("${jwt.refreshExpirationTime}")
+  @Value("${jwt.refresh-expiration-time}")
   private long refreshExpirationTime;
 
   @Transactional

@@ -30,10 +30,10 @@ server:
   port: 8081
 
 jwt:
-  expirationTime: ${EXPIRATION_TIME}
-  refreshExpirationTime: ${REFRESH_EXPIRATION_TIME}
-  publicKey: ${PUBLIC_KEY}
-  privateKey: ${PRIVATE_KEY}
+  expiration-time: ${EXPIRATION_TIME}
+  refresh-expiration-time: ${REFRESH_EXPIRATION_TIME}
+  public-key: ${PUBLIC_KEY}
+  private-key: ${PRIVATE_KEY}
 
 
 springdoc:
@@ -52,6 +52,8 @@ bundle:
     service:
       enabled: false
       url: http://localhost:8081
+  kafka:
+    enabled: false
 
 management:
   endpoints:

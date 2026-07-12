@@ -20,16 +20,16 @@ import java.util.Date;
 @Component
 @Slf4j
 public class Jwt {
-  @Value("${jwt.expirationTime}")
+  @Value("${jwt.expiration-time}")
   private long expirationMs;
 
-  @Value("${jwt.refreshExpirationTime}")
+  @Value("${jwt.refresh-expiration-time}")
   private long refreshExpirationTime;
 
-  @Value("${jwt.privateKey}")
+  @Value("${jwt.private-key}")
   private String privateKeyBase64;
 
-  @Value("${jwt.publicKey}")
+  @Value("${jwt.public-key}")
   private String publicKeyBase64;
 
   private PrivateKey privateKey;

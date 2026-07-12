@@ -66,7 +66,7 @@ public class UserApiTest extends BaseConfig {
   @Autowired
   private UserTarifRepository userTarifRepository;
 
-  @Value("${jwt.privateKey}")
+  @Value("${jwt.private-key}")
   private String privateKey;
 
   private static CreateUserRequestDto createValidUser() {
