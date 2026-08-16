@@ -151,12 +151,14 @@ public class SecurityServiceTest {
     var user = TestData.createUser();
     editDto.setId(user.getId());
     userMapper.updateUser(editDto, user);
+    var bundleUser = TestData.createBundleUser();
+    bundleUser.setId(user.getId());
 
-    when(userService.findById(editDto.getId())).thenReturn(user);
+    when(userService.findByIdWithTarifs(editDto.getId())).thenReturn(user);
     when(userService.findUserByLogin(user.getLogin())).thenReturn(Optional.empty());
     when(userService.findUserByEmail(user.getEmail())).thenReturn(Optional.empty());
     when(userService.save(any())).thenReturn(user);
-    when(userDetailService.getCurrentUser()).thenReturn(user);
+    when(userDetailService.getCurrentUser()).thenReturn(bundleUser);
     when(authenticationManager.authenticate(any()))
       .thenReturn(new AuthenticationMock());
 
@@ -170,11 +172,11 @@ public class SecurityServiceTest {
   @Test
   void editWithNoAccess() {
     var editDto = TestData.createUserEditRequestDto();
-    var user = TestData.createUser();
     editDto.setId(UUID.randomUUID());
-    user.setUserPrivileges(Collections.emptySet());
+    var bundleUser = TestData.createBundleUser();
+    bundleUser.setPrivileges(Collections.emptySet());
 
-    when(userDetailService.getCurrentUser()).thenReturn(user);
+    when(userDetailService.getCurrentUser()).thenReturn(bundleUser);
 
     assertThatThrownBy(() -> securityService.editUser(editDto, "Bearer 12345"))
       .isInstanceOf(AccessDeniedException.class);
@@ -200,8 +202,10 @@ public class SecurityServiceTest {
     var dto = new UserEmailRequestDto();
     var user = TestData.createUser();
     dto.setId(user.getId());
+    var bundleUser = TestData.createBundleUser();
+    bundleUser.setId(user.getId());
 
-    when(userDetailService.getCurrentUser()).thenReturn(user);
+    when(userDetailService.getCurrentUser()).thenReturn(bundleUser);
     when(userService.findById(user.getId())).thenReturn(user);
     when(userService.changeStatus(user, UserStatus.EMAIL_ACTIVATED)).thenReturn(user);
 
@@ -213,9 +217,11 @@ public class SecurityServiceTest {
   @Test
   void getUser() {
     var user = TestData.createUser();
+    var bundleUser = TestData.createBundleUser();
+    bundleUser.setId(user.getId());
 
     when(userService.findById(user.getId())).thenReturn(user);
-    when(userDetailService.getCurrentUser()).thenReturn(user);
+    when(userDetailService.getCurrentUser()).thenReturn(bundleUser);
 
     var result = securityService.getUser(user.getId());
 

@@ -1,12 +1,14 @@
 package rikser123.security;
 
-import java.time.LocalDate;
-import java.util.List;
-import java.util.UUID;
 import rikser123.security.dto.request.CreateUserRequestDto;
 import rikser123.security.dto.request.EditUserDto;
 import rikser123.security.repository.entity.Privilege;
 import rikser123.security.repository.entity.User;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 public class TestData {
   public static CreateUserRequestDto createUserRequestDto() {
@@ -49,5 +51,18 @@ public class TestData {
     userDto.getPrivileges().addAll(List.of(Privilege.USER_EDIT, Privilege.USER_DELETE));
 
     return userDto;
+  }
+
+  public static rikser123.bundle.dto.User createBundleUser() {
+    var user = new rikser123.bundle.dto.User();
+    user.setId(UUID.randomUUID());
+    user.setLogin("login");
+    user.setPassword("password");
+    user.setFirstName("firstName");
+    user.setMiddleName("middleName");
+    user.setLastName("lastName");
+    user.setBirthDate(LocalDate.of(1990, 01, 01));
+    user.setPrivileges(Set.of("USER_EDIT", "USER_DELETE"));
+    return user;
   }
 }
