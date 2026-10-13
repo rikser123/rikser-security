@@ -91,3 +91,11 @@ VALUES ('458d0244-98ff-4c8a-b2ba-5e6f8440e37b',
         'REGISTERED',
         NOW(),
         NOW());
+
+INSERT INTO user_privilege (id, user_id, privilege)
+VALUES ('458d0244-98ff-4c8a-b2ba-5e6f8440e37b',
+        '458d0244-98ff-4c8a-b2ba-5e6f8440e37b',
+        'KAFKA_VIEW'),
+       ('458d0244-98ff-4c8a-b2ba-5e6f8440e371',
+        '458d0244-98ff-4c8a-b2ba-5e6f8440e37b',
+        'KAFKA_SEND')

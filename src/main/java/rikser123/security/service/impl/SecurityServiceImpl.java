@@ -31,6 +31,7 @@ import rikser123.security.dto.request.UserEmailRequestDto;
 import rikser123.security.dto.request.UserFilterDto;
 import rikser123.security.dto.response.CreateUserResponseDto;
 import rikser123.security.dto.response.LoginResponseDto;
+import rikser123.security.dto.response.LoginSystemResponseDto;
 import rikser123.security.dto.response.PublicKeyResponseDto;
 import rikser123.security.dto.response.UpdateTokenResponseDto;
 import rikser123.security.dto.response.UserDeactivateResponse;
@@ -57,6 +58,7 @@ import java.util.UUID;
 @Slf4j
 public class SecurityServiceImpl implements SecurityService {
   public static final String BEARER_PREFIX = "Bearer ";
+  private static final Set<Privilege> SYSTEM_PRIVILEGES = Set.of(Privilege.KAFKA_SEND, Privilege.KAFKA_VIEW);
 
   private final UserMapper userMapper;
   private final Jwt jwt;
@@ -148,6 +150,41 @@ public class SecurityServiceImpl implements SecurityService {
     } catch (BadCredentialsException e) {
       log.warn("Ошибка авторизации", e);
       var response = new RikserResponseItem<LoginResponseDto>();
+      response.setMessage(e.getMessage());
+      response.setHttpStatus(HttpStatus.UNAUTHORIZED);
+      return response;
+    }
+  }
+
+  @Override
+  public RikserResponseItem<LoginSystemResponseDto> loginSystem(LoginRequestDto requestDto) {
+    var userLogin = requestDto.getLogin();
+
+    try {
+      var user = userService.findUserByLogin(requestDto.getLogin()).orElseThrow(() ->
+        new EntityNotFoundException(String.format("Пользователь с логином %s не найден", userLogin)));
+
+      var isMatches = passwordEncoder.matches(requestDto.getPassword(), user.getPassword());
+      if (!isMatches) {
+        throw new BadCredentialsException("Неверный пароль!");
+      }
+
+      SYSTEM_PRIVILEGES.forEach(privilege -> {
+        if (!user.getPrivileges().contains(privilege)) {
+          throw new BadCredentialsException("У пользователя отсутствуют системные привилегии!");
+        }
+      });
+
+      var token = jwt.generateToken(user);
+
+      var responseDto = new LoginSystemResponseDto();
+      responseDto.setToken(token);
+
+      return RikserResponseUtils.createResponse(responseDto);
+
+    } catch (BadCredentialsException e) {
+      log.warn("Ошибка авторизации", e);
+      var response = new RikserResponseItem<LoginSystemResponseDto>();
       response.setMessage(e.getMessage());
       response.setHttpStatus(HttpStatus.UNAUTHORIZED);
       return response;

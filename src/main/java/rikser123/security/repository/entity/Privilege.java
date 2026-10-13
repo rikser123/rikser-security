@@ -8,5 +8,6 @@ public enum Privilege {
   VIEW_REQUEST,
   CHECK_SPELLS,
   KAFKA_VIEW,
-  KAFKA_SEND
+  KAFKA_SEND,
+  CUSTOM_PROMPT
 }

@@ -21,6 +21,7 @@ import rikser123.security.dto.request.UserEmailRequestDto;
 import rikser123.security.dto.request.UserFilterDto;
 import rikser123.security.dto.response.CreateUserResponseDto;
 import rikser123.security.dto.response.LoginResponseDto;
+import rikser123.security.dto.response.LoginSystemResponseDto;
 import rikser123.security.dto.response.PublicKeyResponseDto;
 import rikser123.security.dto.response.UpdateTokenResponseDto;
 import rikser123.security.dto.response.UserDeactivateResponse;
@@ -53,6 +54,12 @@ public class UserController implements UserApi {
   public RikserResponseItem<LoginResponseDto> login(
     @Valid @RequestBody RikserRequestItem<LoginRequestDto> loginDto) {
     return securityService.login(loginDto.getData());
+  }
+
+  @Override
+  public RikserResponseItem<LoginSystemResponseDto> loginSystem(
+    @Valid @RequestBody RikserRequestItem<LoginRequestDto> loginDto) {
+    return securityService.loginSystem(loginDto.getData());
   }
 
   @Override

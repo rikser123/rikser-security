@@ -211,6 +211,25 @@ public class UserApiTest extends BaseConfig {
   }
 
   @Test
+  void loginSystemWithMissingPrivileges() throws Exception {
+    var user = TestData.createUser();
+    var rawPassword = user.getPassword();
+    user.setPassword(passwordEncoder.encode(rawPassword));
+    userRepository.save(user);
+
+    var loginDto = new LoginRequestDto();
+    loginDto.setPassword(rawPassword);
+    loginDto.setLogin(user.getLogin());
+
+    client.perform(post("/api/v1/user/login/system")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(IntegrationUtils.buildRequest(loginDto))))
+      .andExpect(status().isUnauthorized())
+      .andExpect(jsonPath("$.result").value(false))
+      .andExpect(jsonPath("$.message").value("У пользователя отсутствуют системные привилегии!"));
+  }
+
+  @Test
   void editUser() throws Exception {
     var user = TestData.createUser();
     var savedUser = userRepository.save(user);

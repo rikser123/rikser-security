@@ -28,6 +28,7 @@ import rikser123.security.dto.request.UserEmailRequestDto;
 import rikser123.security.dto.request.UserFilterDto;
 import rikser123.security.dto.response.CreateUserResponseDto;
 import rikser123.security.dto.response.LoginResponseDto;
+import rikser123.security.dto.response.LoginSystemResponseDto;
 import rikser123.security.dto.response.PublicKeyResponseDto;
 import rikser123.security.dto.response.UpdateTokenResponseDto;
 import rikser123.security.dto.response.UserDeactivateResponse;
@@ -57,6 +58,13 @@ public interface UserApi {
   @Operation(description = "Авторизация пользователя")
   @ResponseStatus(HttpStatus.OK)
   RikserResponseItem<LoginResponseDto> login(
+    @RequestBody @Parameter(description = "Параметры для авторизации", required = true)
+    RikserRequestItem<LoginRequestDto> loginDto);
+
+  @PostMapping("/login/system")
+  @Operation(description = "Авторизация системного пользователя")
+  @ResponseStatus(HttpStatus.OK)
+  RikserResponseItem<LoginSystemResponseDto> loginSystem(
     @RequestBody @Parameter(description = "Параметры для авторизации", required = true)
     RikserRequestItem<LoginRequestDto> loginDto);
 

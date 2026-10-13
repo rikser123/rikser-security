@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
@@ -23,6 +24,8 @@ import rikser123.security.dto.request.UserEmailRequestDto;
 import rikser123.security.dto.request.UserFilterDto;
 import rikser123.security.mapper.UserMapper;
 import rikser123.security.mapper.UserMapperImpl;
+import rikser123.security.repository.entity.Privilege;
+import rikser123.security.repository.entity.UserPrivilege;
 import rikser123.security.repository.entity.UserStatus;
 import rikser123.security.service.impl.SecurityServiceImpl;
 
@@ -65,6 +68,7 @@ public class SecurityServiceTest {
   @Mock
   private BlackListService blackListService;
 
+  @Mock
   private TarifService tarifService;
 
 
@@ -143,6 +147,44 @@ public class SecurityServiceTest {
 
     assertThatThrownBy(() -> securityService.login(loginDto))
       .isInstanceOf(EntityNotFoundException.class);
+  }
+
+  @Test
+  void loginSystem() {
+    var loginDto = new LoginRequestDto();
+    loginDto.setLogin("login");
+    loginDto.setPassword("password");
+    var user = TestData.createUser();
+
+    var viewPrivilege = new UserPrivilege();
+    viewPrivilege.setPrivilege(Privilege.KAFKA_VIEW);
+    var sendPrivilege = new UserPrivilege();
+    sendPrivilege.setPrivilege(Privilege.KAFKA_SEND);
+    user.getUserPrivileges().add(viewPrivilege);
+    user.getUserPrivileges().add(sendPrivilege);
+
+    when(userService.findUserByLogin(loginDto.getLogin())).thenReturn(Optional.of(user));
+    when(passwordEncoder.matches(any(), any())).thenReturn(true);
+    when(jwt.generateToken(any())).thenReturn("token");
+
+    var result = securityService.loginSystem(loginDto);
+
+    assertThat(result.getData().getToken()).isEqualTo("token");
+  }
+
+  @Test
+  void loginSystemFailPrivileges() {
+    var loginDto = new LoginRequestDto();
+    loginDto.setLogin("login");
+    loginDto.setPassword("password");
+    var user = TestData.createUser();
+
+    when(userService.findUserByLogin(loginDto.getLogin())).thenReturn(Optional.of(user));
+    when(passwordEncoder.matches(any(), any())).thenReturn(true);
+
+    var result = securityService.loginSystem(loginDto);
+
+    assertThat(result.getHttpStatus()).isEqualTo(HttpStatus.UNAUTHORIZED);
   }
 
   @Test
